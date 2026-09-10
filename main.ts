@@ -1297,6 +1297,18 @@ export default class SideNotesPlugin extends Plugin {
     input.click();
   }
 
+  private async writeImportJournal(serialized: string) {
+    const temporary = `${IMPORT_JOURNAL}.${crypto.randomUUID()}.pending`;
+    try {
+      await this.app.vault.adapter.write(temporary, serialized);
+      if (await this.app.vault.adapter.read(temporary) !== serialized) throw new Error("Import journal verification failed.");
+      await this.app.vault.adapter.rename(temporary, IMPORT_JOURNAL);
+    } catch (error) {
+      if (await this.app.vault.adapter.exists(temporary)) await this.app.vault.adapter.remove(temporary);
+      throw error;
+    }
+  }
+
   async importSideNotesBundleText(rawBundle: string): Promise<SideNotesImportResult> {
     this.assertStoreOwnership();
     if (this.importInProgress) throw new Error("A SideNotes import is already running.");
@@ -1325,7 +1337,7 @@ export default class SideNotesPlugin extends Plugin {
       await this.ensureVaultFolder(SIDE_NOTES_FOLDER);
       // Durable pre-import state and complete validated payload survive process interruption.
       const journal = JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), bundle });
-      await this.app.vault.adapter.write(IMPORT_JOURNAL, journal);
+      await this.writeImportJournal(journal);
       if (await this.app.vault.adapter.read(IMPORT_JOURNAL) !== journal) throw new Error("Import journal verification failed.");
       await this.storeSaveQueue;
       let noteCount = 0, attachmentCount = 0;
@@ -1334,7 +1346,7 @@ export default class SideNotesPlugin extends Plugin {
         const result = await this.importSideNotesTransferFile(transferFile, importedAttachmentPaths);
         noteCount += result.noteCount;
         attachmentCount += result.attachmentCount;
-        await this.app.vault.adapter.write(IMPORT_JOURNAL, JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), completed: this.sideNotesData, createdPaths: created.map(file => file.path), bundle }));
+        await this.writeImportJournal(JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), completed: this.sideNotesData, createdPaths: created.map(file => file.path), bundle }));
       }
       await this.saveSideNotesData(true);
       committed = true;
@@ -1343,7 +1355,15 @@ export default class SideNotesPlugin extends Plugin {
       return { fileCount: bundle.files.length, noteCount, attachmentCount };
     } catch (error) {
       if (!committed) {
-        this.sideNotesData = JSON.parse(before);
+        const previous = JSON.parse(before) as SideNotesData;
+        // Imports only add fresh paths/IDs. Roll back their in-memory mappings while
+        // retaining unrelated changes made by other UI actions during the await points.
+        const paths = new Set(created.map(file => file.path));
+        for (const filePath of paths) {
+          const id = this.sideNotesData.sideNoteIds[filePath];
+          if (!previous.sideNoteIds[filePath]) delete this.sideNotesData.sideNoteIds[filePath];
+          if (id && !previous.filesBySideNoteId[id] && this.sideNotesData.filesBySideNoteId[id]?.path === filePath) delete this.sideNotesData.filesBySideNoteId[id];
+        }
         // Keep created Markdown/media and the durable journal on failure: host events,
         // sync or the user may already have edited them. Never delete potentially valid notes.
         // No partial import is reported as successful. Recovery is explicit and fail-closed.
@@ -1459,7 +1479,7 @@ export default class SideNotesPlugin extends Plugin {
   }
 
   async ensureVaultFolder(folder: string) {
-    if (folder.split("/")[0] === this.app.vault.configDir || folder.split("/")[0] === ".git") {
+    if (folder.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() || folder.split("/")[0].toLowerCase() === ".git") {
       throw new Error("SideNotes cannot import into vault configuration directories.");
     }
     if (!folder) {
@@ -6007,8 +6027,8 @@ function sanitizeOptionalVaultPath(path: string): string | null {
   const normalizedPath = path.replace(/\\/g, "/");
   if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath)) return null;
   const parts = normalizedPath.split("/").filter((part) => part.length > 0);
-  if (parts.some(part => part.trim() === "." || part.trim() === "..") ||
-      parts[0] === ".obsidian" || parts[0] === ".git") return null;
+  if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
+      parts[0]?.toLowerCase() === ".obsidian" || parts[0]?.toLowerCase() === ".git") return null;
   const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
   return sanitizedParts.join("/") || null;
 }

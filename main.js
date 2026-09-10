@@ -915,7 +915,22 @@ class SideNotesPlugin extends obsidian_1.Plugin {
         });
         input.click();
     }
+    async writeImportJournal(serialized) {
+        const temporary = `${IMPORT_JOURNAL}.${crypto.randomUUID()}.pending`;
+        try {
+            await this.app.vault.adapter.write(temporary, serialized);
+            if (await this.app.vault.adapter.read(temporary) !== serialized)
+                throw new Error("Import journal verification failed.");
+            await this.app.vault.adapter.rename(temporary, IMPORT_JOURNAL);
+        }
+        catch (error) {
+            if (await this.app.vault.adapter.exists(temporary))
+                await this.app.vault.adapter.remove(temporary);
+            throw error;
+        }
+    }
     async importSideNotesBundleText(rawBundle) {
+        var _a;
         this.assertStoreOwnership();
         if (this.importInProgress)
             throw new Error("A SideNotes import is already running.");
@@ -947,7 +962,7 @@ class SideNotesPlugin extends obsidian_1.Plugin {
             await this.ensureVaultFolder(SIDE_NOTES_FOLDER);
             // Durable pre-import state and complete validated payload survive process interruption.
             const journal = JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), bundle });
-            await this.app.vault.adapter.write(IMPORT_JOURNAL, journal);
+            await this.writeImportJournal(journal);
             if (await this.app.vault.adapter.read(IMPORT_JOURNAL) !== journal)
                 throw new Error("Import journal verification failed.");
             await this.storeSaveQueue;
@@ -957,7 +972,7 @@ class SideNotesPlugin extends obsidian_1.Plugin {
                 const result = await this.importSideNotesTransferFile(transferFile, importedAttachmentPaths);
                 noteCount += result.noteCount;
                 attachmentCount += result.attachmentCount;
-                await this.app.vault.adapter.write(IMPORT_JOURNAL, JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), completed: this.sideNotesData, createdPaths: created.map(file => file.path), bundle }));
+                await this.writeImportJournal(JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), completed: this.sideNotesData, createdPaths: created.map(file => file.path), bundle }));
             }
             await this.saveSideNotesData(true);
             committed = true;
@@ -967,7 +982,17 @@ class SideNotesPlugin extends obsidian_1.Plugin {
         }
         catch (error) {
             if (!committed) {
-                this.sideNotesData = JSON.parse(before);
+                const previous = JSON.parse(before);
+                // Imports only add fresh paths/IDs. Roll back their in-memory mappings while
+                // retaining unrelated changes made by other UI actions during the await points.
+                const paths = new Set(created.map(file => file.path));
+                for (const filePath of paths) {
+                    const id = this.sideNotesData.sideNoteIds[filePath];
+                    if (!previous.sideNoteIds[filePath])
+                        delete this.sideNotesData.sideNoteIds[filePath];
+                    if (id && !previous.filesBySideNoteId[id] && ((_a = this.sideNotesData.filesBySideNoteId[id]) === null || _a === void 0 ? void 0 : _a.path) === filePath)
+                        delete this.sideNotesData.filesBySideNoteId[id];
+                }
                 // Keep created Markdown/media and the durable journal on failure: host events,
                 // sync or the user may already have edited them. Never delete potentially valid notes.
                 // No partial import is reported as successful. Recovery is explicit and fail-closed.
@@ -1069,7 +1094,7 @@ class SideNotesPlugin extends obsidian_1.Plugin {
         return candidate;
     }
     async ensureVaultFolder(folder) {
-        if (folder.split("/")[0] === this.app.vault.configDir || folder.split("/")[0] === ".git") {
+        if (folder.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() || folder.split("/")[0].toLowerCase() === ".git") {
             throw new Error("SideNotes cannot import into vault configuration directories.");
         }
         if (!folder) {
@@ -4931,12 +4956,13 @@ function sanitizeVaultPath(path) {
     return (_a = sanitizeOptionalVaultPath(path)) !== null && _a !== void 0 ? _a : "Imported side notes.md";
 }
 function sanitizeOptionalVaultPath(path) {
+    var _a, _b;
     const normalizedPath = path.replace(/\\/g, "/");
     if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath))
         return null;
     const parts = normalizedPath.split("/").filter((part) => part.length > 0);
-    if (parts.some(part => part.trim() === "." || part.trim() === "..") ||
-        parts[0] === ".obsidian" || parts[0] === ".git")
+    if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
+        ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === ".obsidian" || ((_b = parts[0]) === null || _b === void 0 ? void 0 : _b.toLowerCase()) === ".git")
         return null;
     const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
     return sanitizedParts.join("/") || null;
