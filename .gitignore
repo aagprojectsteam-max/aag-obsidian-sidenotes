@@ -1,0 +1,34 @@
+node_modules/
+.npm-cache/
+main.js
+data.json
+_SideNotes/
+.obsidian/
+*.sidenotes
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Logs, temporary files, and OS noise
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+/data.json
+
+/dist/
+
+/.local-backups/
+
+/node_modules/
+
+*.tgz
+
+# Generated runtime is deliberately tracked in clean staging.
+!/main.js

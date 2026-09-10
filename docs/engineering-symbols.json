@@ -1,0 +1,1868 @@
+{
+  "source": "main.ts",
+  "symbols": [
+    {
+      "name": "SideNotesPlugin",
+      "kind": "ClassDeclaration",
+      "line": 289
+    },
+    {
+      "name": "onload",
+      "kind": "MethodDeclaration",
+      "line": 297
+    },
+    {
+      "name": "onunload",
+      "kind": "MethodDeclaration",
+      "line": 410
+    },
+    {
+      "name": "handleActiveLeafChange",
+      "kind": "MethodDeclaration",
+      "line": 414
+    },
+    {
+      "name": "activateView",
+      "kind": "MethodDeclaration",
+      "line": 441
+    },
+    {
+      "name": "toggleNewNoteComposer",
+      "kind": "MethodDeclaration",
+      "line": 463
+    },
+    {
+      "name": "loadSettings",
+      "kind": "MethodDeclaration",
+      "line": 484
+    },
+    {
+      "name": "saveSettings",
+      "kind": "MethodDeclaration",
+      "line": 488
+    },
+    {
+      "name": "loadSideNotesData",
+      "kind": "MethodDeclaration",
+      "line": 492
+    },
+    {
+      "name": "savePluginState",
+      "kind": "MethodDeclaration",
+      "line": 510
+    },
+    {
+      "name": "getSideNoteIDFromProperties",
+      "kind": "MethodDeclaration",
+      "line": 515
+    },
+    {
+      "name": "isSideNotesIDInUse",
+      "kind": "MethodDeclaration",
+      "line": 521
+    },
+    {
+      "name": "makeUnusedSideNotesID",
+      "kind": "MethodDeclaration",
+      "line": 542
+    },
+    {
+      "name": "ensureSideNoteIDProperty",
+      "kind": "MethodDeclaration",
+      "line": 551
+    },
+    {
+      "name": "restoreSideNoteIDPropertyForFile",
+      "kind": "MethodDeclaration",
+      "line": 568
+    },
+    {
+      "name": "migrateLegacySideNotesIDProperties",
+      "kind": "MethodDeclaration",
+      "line": 581
+    },
+    {
+      "name": "loadExternalSideNotesData",
+      "kind": "MethodDeclaration",
+      "line": 607
+    },
+    {
+      "name": "saveSideNotesData",
+      "kind": "MethodDeclaration",
+      "line": 634
+    },
+    {
+      "name": "normalizeSideNotesData",
+      "kind": "MethodDeclaration",
+      "line": 645
+    },
+    {
+      "name": "refreshContext",
+      "kind": "MethodDeclaration",
+      "line": 707
+    },
+    {
+      "name": "isActiveElementInsideSideNotesView",
+      "kind": "MethodDeclaration",
+      "line": 727
+    },
+    {
+      "name": "isSideNotesViewActive",
+      "kind": "MethodDeclaration",
+      "line": 732
+    },
+    {
+      "name": "suppressContextRefreshBriefly",
+      "kind": "MethodDeclaration",
+      "line": 736
+    },
+    {
+      "name": "isContextRefreshSuppressed",
+      "kind": "MethodDeclaration",
+      "line": 740
+    },
+    {
+      "name": "refreshViews",
+      "kind": "MethodDeclaration",
+      "line": 744
+    },
+    {
+      "name": "focusLastMarkdownEditor",
+      "kind": "MethodDeclaration",
+      "line": 753
+    },
+    {
+      "name": "usesMarkdownBlockIds",
+      "kind": "MethodDeclaration",
+      "line": 758
+    },
+    {
+      "name": "syncCurrentBlockIdentity",
+      "kind": "MethodDeclaration",
+      "line": 762
+    },
+    {
+      "name": "getCurrentParagraphContext",
+      "kind": "MethodDeclaration",
+      "line": 788
+    },
+    {
+      "name": "getNotesForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 832
+    },
+    {
+      "name": "getNoteGroupsForCurrentFile",
+      "kind": "MethodDeclaration",
+      "line": 841
+    },
+    {
+      "name": "getOrphanedFileNotes",
+      "kind": "MethodDeclaration",
+      "line": 858
+    },
+    {
+      "name": "getAllStoredFileNotes",
+      "kind": "MethodDeclaration",
+      "line": 888
+    },
+    {
+      "name": "getCurrentFileInfo",
+      "kind": "MethodDeclaration",
+      "line": 914
+    },
+    {
+      "name": "addSideNotesExportMenuItem",
+      "kind": "MethodDeclaration",
+      "line": 926
+    },
+    {
+      "name": "getExportableSideNotesFiles",
+      "kind": "MethodDeclaration",
+      "line": 942
+    },
+    {
+      "name": "exportSideNotesBundle",
+      "kind": "MethodDeclaration",
+      "line": 958
+    },
+    {
+      "name": "exportAllSideNotesBundle",
+      "kind": "MethodDeclaration",
+      "line": 992
+    },
+    {
+      "name": "createTransferFileForAttachedFile",
+      "kind": "MethodDeclaration",
+      "line": 1040
+    },
+    {
+      "name": "createTransferFileForOrphanedFile",
+      "kind": "MethodDeclaration",
+      "line": 1056
+    },
+    {
+      "name": "getTransferAttachmentsForFile",
+      "kind": "MethodDeclaration",
+      "line": 1070
+    },
+    {
+      "name": "getTransferAttachmentsForSideNoteMedia",
+      "kind": "MethodDeclaration",
+      "line": 1078
+    },
+    {
+      "name": "getTransferAttachmentsForFiles",
+      "kind": "MethodDeclaration",
+      "line": 1082
+    },
+    {
+      "name": "getSideNoteMediaFiles",
+      "kind": "MethodDeclaration",
+      "line": 1107
+    },
+    {
+      "name": "getLinkedAttachmentFiles",
+      "kind": "MethodDeclaration",
+      "line": 1129
+    },
+    {
+      "name": "getSideNotesBundleFileName",
+      "kind": "MethodDeclaration",
+      "line": 1166
+    },
+    {
+      "name": "getAvailableSideNotesBundlePath",
+      "kind": "MethodDeclaration",
+      "line": 1172
+    },
+    {
+      "name": "saveSideNotesBundleWithPicker",
+      "kind": "MethodDeclaration",
+      "line": 1177
+    },
+    {
+      "name": "importSideNotesBundleFromDisk",
+      "kind": "MethodDeclaration",
+      "line": 1221
+    },
+    {
+      "name": "importSideNotesBundleText",
+      "kind": "MethodDeclaration",
+      "line": 1247
+    },
+    {
+      "name": "importSideNotesTransferFile",
+      "kind": "MethodDeclaration",
+      "line": 1266
+    },
+    {
+      "name": "importSideNotesTransferAttachments",
+      "kind": "MethodDeclaration",
+      "line": 1296
+    },
+    {
+      "name": "getAvailableImportedMarkdownPath",
+      "kind": "MethodDeclaration",
+      "line": 1338
+    },
+    {
+      "name": "getAvailableVaultPath",
+      "kind": "MethodDeclaration",
+      "line": 1350
+    },
+    {
+      "name": "ensureVaultFolder",
+      "kind": "MethodDeclaration",
+      "line": 1367
+    },
+    {
+      "name": "exportCurrentNotes",
+      "kind": "MethodDeclaration",
+      "line": 1385
+    },
+    {
+      "name": "exportSelectedNotesToFile",
+      "kind": "MethodDeclaration",
+      "line": 1410
+    },
+    {
+      "name": "copySelectedNotesToClipboard",
+      "kind": "MethodDeclaration",
+      "line": 1429
+    },
+    {
+      "name": "getSelectedExportFiles",
+      "kind": "MethodDeclaration",
+      "line": 1470
+    },
+    {
+      "name": "getSelectedExportTitle",
+      "kind": "MethodDeclaration",
+      "line": 1520
+    },
+    {
+      "name": "openStoredFile",
+      "kind": "MethodDeclaration",
+      "line": 1528
+    },
+    {
+      "name": "openSideNoteFile",
+      "kind": "MethodDeclaration",
+      "line": 1538
+    },
+    {
+      "name": "openSideNoteUrl",
+      "kind": "MethodDeclaration",
+      "line": 1563
+    },
+    {
+      "name": "getFullVaultFilePath",
+      "kind": "MethodDeclaration",
+      "line": 1577
+    },
+    {
+      "name": "openFileAtBlock",
+      "kind": "MethodDeclaration",
+      "line": 1594
+    },
+    {
+      "name": "findBlockLine",
+      "kind": "MethodDeclaration",
+      "line": 1622
+    },
+    {
+      "name": "getParagraphExportGroups",
+      "kind": "MethodDeclaration",
+      "line": 1651
+    },
+    {
+      "name": "getAvailableExportPath",
+      "kind": "MethodDeclaration",
+      "line": 1668
+    },
+    {
+      "name": "buildExportMarkdown",
+      "kind": "MethodDeclaration",
+      "line": 1681
+    },
+    {
+      "name": "buildSelectedExportMarkdown",
+      "kind": "MethodDeclaration",
+      "line": 1704
+    },
+    {
+      "name": "addNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1731
+    },
+    {
+      "name": "addImageNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1760
+    },
+    {
+      "name": "addAudioNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1798
+    },
+    {
+      "name": "addAudioNoteForContext",
+      "kind": "MethodDeclaration",
+      "line": 1807
+    },
+    {
+      "name": "addVideoNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1843
+    },
+    {
+      "name": "addFileNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1878
+    },
+    {
+      "name": "addFilePathNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1908
+    },
+    {
+      "name": "addUrlNoteForCurrentContext",
+      "kind": "MethodDeclaration",
+      "line": 1939
+    },
+    {
+      "name": "updateNote",
+      "kind": "MethodDeclaration",
+      "line": 1970
+    },
+    {
+      "name": "updateImageNoteZoom",
+      "kind": "MethodDeclaration",
+      "line": 1997
+    },
+    {
+      "name": "updateImageNoteViewport",
+      "kind": "MethodDeclaration",
+      "line": 2021
+    },
+    {
+      "name": "updateImageNoteRotation",
+      "kind": "MethodDeclaration",
+      "line": 2060
+    },
+    {
+      "name": "updateImageNotePan",
+      "kind": "MethodDeclaration",
+      "line": 2079
+    },
+    {
+      "name": "deleteNote",
+      "kind": "MethodDeclaration",
+      "line": 2099
+    },
+    {
+      "name": "moveNoteWithinBlock",
+      "kind": "MethodDeclaration",
+      "line": 2116
+    },
+    {
+      "name": "mergeSelectedNotesWithinBlock",
+      "kind": "MethodDeclaration",
+      "line": 2140
+    },
+    {
+      "name": "deleteSelectedNotes",
+      "kind": "MethodDeclaration",
+      "line": 2185
+    },
+    {
+      "name": "moveNotesToCurrentParagraph",
+      "kind": "MethodDeclaration",
+      "line": 2218
+    },
+    {
+      "name": "deleteAllNotesForSideNoteId",
+      "kind": "MethodDeclaration",
+      "line": 2271
+    },
+    {
+      "name": "ensureCurrentContextHasBlockId",
+      "kind": "MethodDeclaration",
+      "line": 2291
+    },
+    {
+      "name": "makeUniqueInternalBlockId",
+      "kind": "MethodDeclaration",
+      "line": 2342
+    },
+    {
+      "name": "getCurrentMarkdownView",
+      "kind": "MethodDeclaration",
+      "line": 2352
+    },
+    {
+      "name": "appendBlockId",
+      "kind": "MethodDeclaration",
+      "line": 2366
+    },
+    {
+      "name": "removeExistingBlockIdFromEditor",
+      "kind": "MethodDeclaration",
+      "line": 2388
+    },
+    {
+      "name": "restoreMissingBlockIdIfNeeded",
+      "kind": "MethodDeclaration",
+      "line": 2402
+    },
+    {
+      "name": "ensureBlockNotes",
+      "kind": "MethodDeclaration",
+      "line": 2420
+    },
+    {
+      "name": "findBlockIdForParagraph",
+      "kind": "MethodDeclaration",
+      "line": 2442
+    },
+    {
+      "name": "ensureStoredFileNotes",
+      "kind": "MethodDeclaration",
+      "line": 2477
+    },
+    {
+      "name": "getStoredFileNotes",
+      "kind": "MethodDeclaration",
+      "line": 2511
+    },
+    {
+      "name": "getStoredFileNotesByPath",
+      "kind": "MethodDeclaration",
+      "line": 2530
+    },
+    {
+      "name": "getStoredFileNotesFromSource",
+      "kind": "MethodDeclaration",
+      "line": 2563
+    },
+    {
+      "name": "isStoredFileAttached",
+      "kind": "MethodDeclaration",
+      "line": 2572
+    },
+    {
+      "name": "handleDelete",
+      "kind": "MethodDeclaration",
+      "line": 2585
+    },
+    {
+      "name": "handleRename",
+      "kind": "MethodDeclaration",
+      "line": 2607
+    },
+    {
+      "name": "SideNotesView",
+      "kind": "ClassDeclaration",
+      "line": 2628
+    },
+    {
+      "name": "getViewType",
+      "kind": "MethodDeclaration",
+      "line": 2680
+    },
+    {
+      "name": "getDisplayText",
+      "kind": "MethodDeclaration",
+      "line": 2684
+    },
+    {
+      "name": "getIcon",
+      "kind": "MethodDeclaration",
+      "line": 2688
+    },
+    {
+      "name": "resetForFileChange",
+      "kind": "MethodDeclaration",
+      "line": 2692
+    },
+    {
+      "name": "showComposer",
+      "kind": "MethodDeclaration",
+      "line": 2703
+    },
+    {
+      "name": "toggleComposer",
+      "kind": "MethodDeclaration",
+      "line": 2717
+    },
+    {
+      "name": "onOpen",
+      "kind": "MethodDeclaration",
+      "line": 2742
+    },
+    {
+      "name": "onClose",
+      "kind": "MethodDeclaration",
+      "line": 2753
+    },
+    {
+      "name": "render",
+      "kind": "MethodDeclaration",
+      "line": 2757
+    },
+    {
+      "name": "captureScrollState",
+      "kind": "MethodDeclaration",
+      "line": 2874
+    },
+    {
+      "name": "restoreScrollState",
+      "kind": "MethodDeclaration",
+      "line": 2889
+    },
+    {
+      "name": "getViewContentEl",
+      "kind": "MethodDeclaration",
+      "line": 2920
+    },
+    {
+      "name": "findNoteCardEl",
+      "kind": "MethodDeclaration",
+      "line": 2925
+    },
+    {
+      "name": "renderHeader",
+      "kind": "MethodDeclaration",
+      "line": 2930
+    },
+    {
+      "name": "renderViewControls",
+      "kind": "MethodDeclaration",
+      "line": 3025
+    },
+    {
+      "name": "refreshViewControls",
+      "kind": "MethodDeclaration",
+      "line": 3035
+    },
+    {
+      "name": "renderViewControlsContent",
+      "kind": "MethodDeclaration",
+      "line": 3048
+    },
+    {
+      "name": "renderHeaderStats",
+      "kind": "MethodDeclaration",
+      "line": 3168
+    },
+    {
+      "name": "getSelectedFileCount",
+      "kind": "MethodDeclaration",
+      "line": 3184
+    },
+    {
+      "name": "renderViewModeSelect",
+      "kind": "MethodDeclaration",
+      "line": 3190
+    },
+    {
+      "name": "getAvailableViewModes",
+      "kind": "MethodDeclaration",
+      "line": 3218
+    },
+    {
+      "name": "renderSelectionToggleButton",
+      "kind": "MethodDeclaration",
+      "line": 3222
+    },
+    {
+      "name": "areAllNoteRefsSelected",
+      "kind": "MethodDeclaration",
+      "line": 3241
+    },
+    {
+      "name": "toggleNoteRefsSelection",
+      "kind": "MethodDeclaration",
+      "line": 3245
+    },
+    {
+      "name": "setNoteRefsSelection",
+      "kind": "MethodDeclaration",
+      "line": 3258
+    },
+    {
+      "name": "getSelectedNoteRefsForView",
+      "kind": "MethodDeclaration",
+      "line": 3269
+    },
+    {
+      "name": "syncRenderedSelectionCheckboxes",
+      "kind": "MethodDeclaration",
+      "line": 3273
+    },
+    {
+      "name": "setRenderedNoteSelection",
+      "kind": "MethodDeclaration",
+      "line": 3291
+    },
+    {
+      "name": "renderSelectionCheckbox",
+      "kind": "MethodDeclaration",
+      "line": 3307
+    },
+    {
+      "name": "canMergeSelectedNotes",
+      "kind": "MethodDeclaration",
+      "line": 3342
+    },
+    {
+      "name": "getNoteSourceKey",
+      "kind": "MethodDeclaration",
+      "line": 3361
+    },
+    {
+      "name": "renderFileNotes",
+      "kind": "MethodDeclaration",
+      "line": 3366
+    },
+    {
+      "name": "renderOrphanedNotes",
+      "kind": "MethodDeclaration",
+      "line": 3403
+    },
+    {
+      "name": "renderVaultNotes",
+      "kind": "MethodDeclaration",
+      "line": 3490
+    },
+    {
+      "name": "getVisibleNoteIds",
+      "kind": "MethodDeclaration",
+      "line": 3577
+    },
+    {
+      "name": "getCurrentParagraphNoteReferences",
+      "kind": "MethodDeclaration",
+      "line": 3595
+    },
+    {
+      "name": "getGroupNoteReferences",
+      "kind": "MethodDeclaration",
+      "line": 3604
+    },
+    {
+      "name": "renderComposerSlot",
+      "kind": "MethodDeclaration",
+      "line": 3610
+    },
+    {
+      "name": "saveComposerDraftFromDom",
+      "kind": "MethodDeclaration",
+      "line": 3625
+    },
+    {
+      "name": "renderComposer",
+      "kind": "MethodDeclaration",
+      "line": 3636
+    },
+    {
+      "name": "addDraftNote",
+      "kind": "MethodDeclaration",
+      "line": 3720
+    },
+    {
+      "name": "chooseImageNoteFile",
+      "kind": "MethodDeclaration",
+      "line": 3731
+    },
+    {
+      "name": "addPastedMediaNote",
+      "kind": "MethodDeclaration",
+      "line": 3750
+    },
+    {
+      "name": "showMediaNoteMenu",
+      "kind": "MethodDeclaration",
+      "line": 3770
+    },
+    {
+      "name": "chooseAudioNoteFile",
+      "kind": "MethodDeclaration",
+      "line": 3815
+    },
+    {
+      "name": "chooseVideoNoteFile",
+      "kind": "MethodDeclaration",
+      "line": 3834
+    },
+    {
+      "name": "chooseGenericNoteFile",
+      "kind": "MethodDeclaration",
+      "line": 3853
+    },
+    {
+      "name": "addPathNote",
+      "kind": "MethodDeclaration",
+      "line": 3871
+    },
+    {
+      "name": "recordAudioNote",
+      "kind": "MethodDeclaration",
+      "line": 3886
+    },
+    {
+      "name": "renderAudioRecordingPanel",
+      "kind": "MethodDeclaration",
+      "line": 3905
+    },
+    {
+      "name": "startAudioRecording",
+      "kind": "MethodDeclaration",
+      "line": 3948
+    },
+    {
+      "name": "stopAudioRecordingAndSave",
+      "kind": "MethodDeclaration",
+      "line": 4001
+    },
+    {
+      "name": "cancelAudioRecording",
+      "kind": "MethodDeclaration",
+      "line": 4012
+    },
+    {
+      "name": "saveAudioRecording",
+      "kind": "MethodDeclaration",
+      "line": 4024
+    },
+    {
+      "name": "resetAudioRecordingState",
+      "kind": "MethodDeclaration",
+      "line": 4053
+    },
+    {
+      "name": "startAudioRecordingTimer",
+      "kind": "MethodDeclaration",
+      "line": 4070
+    },
+    {
+      "name": "stopAudioRecordingTimer",
+      "kind": "MethodDeclaration",
+      "line": 4076
+    },
+    {
+      "name": "updateAudioRecordingTimer",
+      "kind": "MethodDeclaration",
+      "line": 4083
+    },
+    {
+      "name": "stopAudioRecordingStream",
+      "kind": "MethodDeclaration",
+      "line": 4087
+    },
+    {
+      "name": "updateAudioRecordingUi",
+      "kind": "MethodDeclaration",
+      "line": 4092
+    },
+    {
+      "name": "isAudioRecordingActive",
+      "kind": "MethodDeclaration",
+      "line": 4101
+    },
+    {
+      "name": "getAudioRecordingElapsedText",
+      "kind": "MethodDeclaration",
+      "line": 4105
+    },
+    {
+      "name": "getAudioRecordingStatusText",
+      "kind": "MethodDeclaration",
+      "line": 4110
+    },
+    {
+      "name": "captureDraftSelection",
+      "kind": "MethodDeclaration",
+      "line": 4123
+    },
+    {
+      "name": "recordDraftInput",
+      "kind": "MethodDeclaration",
+      "line": 4128
+    },
+    {
+      "name": "undoDraft",
+      "kind": "MethodDeclaration",
+      "line": 4147
+    },
+    {
+      "name": "clearDraftUndoHistory",
+      "kind": "MethodDeclaration",
+      "line": 4163
+    },
+    {
+      "name": "getNoteReference",
+      "kind": "MethodDeclaration",
+      "line": 4170
+    },
+    {
+      "name": "getNoteReferenceKey",
+      "kind": "MethodDeclaration",
+      "line": 4179
+    },
+    {
+      "name": "isNoteCut",
+      "kind": "MethodDeclaration",
+      "line": 4186
+    },
+    {
+      "name": "renderNote",
+      "kind": "MethodDeclaration",
+      "line": 4191
+    },
+    {
+      "name": "renderImageNotePreview",
+      "kind": "MethodDeclaration",
+      "line": 4416
+    },
+    {
+      "name": "renderAudioNotePreview",
+      "kind": "MethodDeclaration",
+      "line": 4467
+    },
+    {
+      "name": "renderVideoNotePreview",
+      "kind": "MethodDeclaration",
+      "line": 4570
+    },
+    {
+      "name": "renderFileNotePreview",
+      "kind": "MethodDeclaration",
+      "line": 4597
+    },
+    {
+      "name": "renderUrlNotePreview",
+      "kind": "MethodDeclaration",
+      "line": 4618
+    },
+    {
+      "name": "resizeContainingSidePanel",
+      "kind": "MethodDeclaration",
+      "line": 4634
+    },
+    {
+      "name": "enableImageFrameGestures",
+      "kind": "MethodDeclaration",
+      "line": 4674
+    },
+    {
+      "name": "renderNoteMoveButtons",
+      "kind": "MethodDeclaration",
+      "line": 5006
+    },
+    {
+      "name": "renderToolbar",
+      "kind": "MethodDeclaration",
+      "line": 5019
+    },
+    {
+      "name": "isNoteExpanded",
+      "kind": "MethodDeclaration",
+      "line": 5060
+    },
+    {
+      "name": "openNotes",
+      "kind": "MethodDeclaration",
+      "line": 5068
+    },
+    {
+      "name": "closeNotes",
+      "kind": "MethodDeclaration",
+      "line": 5075
+    },
+    {
+      "name": "toggleFileCard",
+      "kind": "MethodDeclaration",
+      "line": 5082
+    },
+    {
+      "name": "ConfirmModal",
+      "kind": "ClassDeclaration",
+      "line": 5092
+    },
+    {
+      "name": "onOpen",
+      "kind": "MethodDeclaration",
+      "line": 5103
+    },
+    {
+      "name": "onClose",
+      "kind": "MethodDeclaration",
+      "line": 5121
+    },
+    {
+      "name": "finish",
+      "kind": "MethodDeclaration",
+      "line": 5127
+    },
+    {
+      "name": "confirmInObsidian",
+      "kind": "FunctionDeclaration",
+      "line": 5138
+    },
+    {
+      "name": "TextPromptModal",
+      "kind": "ClassDeclaration",
+      "line": 5144
+    },
+    {
+      "name": "onOpen",
+      "kind": "MethodDeclaration",
+      "line": 5157
+    },
+    {
+      "name": "onClose",
+      "kind": "MethodDeclaration",
+      "line": 5197
+    },
+    {
+      "name": "finish",
+      "kind": "MethodDeclaration",
+      "line": 5203
+    },
+    {
+      "name": "promptTextInObsidian",
+      "kind": "FunctionDeclaration",
+      "line": 5214
+    },
+    {
+      "name": "SideNotesSettingTab",
+      "kind": "ClassDeclaration",
+      "line": 5220
+    },
+    {
+      "name": "display",
+      "kind": "MethodDeclaration",
+      "line": 5228
+    },
+    {
+      "name": "populateNoteFontDropdown",
+      "kind": "MethodDeclaration",
+      "line": 5550
+    },
+    {
+      "name": "loadInstalledFontsIntoDropdown",
+      "kind": "MethodDeclaration",
+      "line": 5566
+    },
+    {
+      "name": "findParagraphRange",
+      "kind": "FunctionDeclaration",
+      "line": 5582
+    },
+    {
+      "name": "findPreviousParagraphRangeFromBlankLine",
+      "kind": "FunctionDeclaration",
+      "line": 5619
+    },
+    {
+      "name": "lineEndsWithBlockId",
+      "kind": "FunctionDeclaration",
+      "line": 5637
+    },
+    {
+      "name": "findParagraphStartLine",
+      "kind": "FunctionDeclaration",
+      "line": 5641
+    },
+    {
+      "name": "findParagraphStartLineByFingerprint",
+      "kind": "FunctionDeclaration",
+      "line": 5656
+    },
+    {
+      "name": "getLineRangeMatchScore",
+      "kind": "FunctionDeclaration",
+      "line": 5692
+    },
+    {
+      "name": "getBlockId",
+      "kind": "FunctionDeclaration",
+      "line": 5713
+    },
+    {
+      "name": "getParagraphFingerprint",
+      "kind": "FunctionDeclaration",
+      "line": 5722
+    },
+    {
+      "name": "stripBlockId",
+      "kind": "FunctionDeclaration",
+      "line": 5730
+    },
+    {
+      "name": "getGeneratedPluginBlockId",
+      "kind": "FunctionDeclaration",
+      "line": 5740
+    },
+    {
+      "name": "getGeneratedPluginBlockTailPattern",
+      "kind": "FunctionDeclaration",
+      "line": 5746
+    },
+    {
+      "name": "parseSideNotesTransferBundle",
+      "kind": "FunctionDeclaration",
+      "line": 5755
+    },
+    {
+      "name": "parseSideNotesTransferAttachments",
+      "kind": "FunctionDeclaration",
+      "line": 5785
+    },
+    {
+      "name": "getSideNotesSettingsFromPluginData",
+      "kind": "FunctionDeclaration",
+      "line": 5811
+    },
+    {
+      "name": "getPluginDataRecord",
+      "kind": "FunctionDeclaration",
+      "line": 5843
+    },
+    {
+      "name": "getSideNotesFilesRecord",
+      "kind": "FunctionDeclaration",
+      "line": 5847
+    },
+    {
+      "name": "getFrontmatterStringValue",
+      "kind": "FunctionDeclaration",
+      "line": 5851
+    },
+    {
+      "name": "getBooleanValue",
+      "kind": "FunctionDeclaration",
+      "line": 5860
+    },
+    {
+      "name": "getNumberValue",
+      "kind": "FunctionDeclaration",
+      "line": 5864
+    },
+    {
+      "name": "getStringValue",
+      "kind": "FunctionDeclaration",
+      "line": 5868
+    },
+    {
+      "name": "getNoteDirectionValue",
+      "kind": "FunctionDeclaration",
+      "line": 5872
+    },
+    {
+      "name": "isRecord",
+      "kind": "FunctionDeclaration",
+      "line": 5876
+    },
+    {
+      "name": "cloneBlockNotesRecord",
+      "kind": "FunctionDeclaration",
+      "line": 5880
+    },
+    {
+      "name": "getBlockNotesCount",
+      "kind": "FunctionDeclaration",
+      "line": 5895
+    },
+    {
+      "name": "getFolderPath",
+      "kind": "FunctionDeclaration",
+      "line": 5899
+    },
+    {
+      "name": "joinVaultPath",
+      "kind": "FunctionDeclaration",
+      "line": 5904
+    },
+    {
+      "name": "sanitizeVaultPath",
+      "kind": "FunctionDeclaration",
+      "line": 5908
+    },
+    {
+      "name": "sanitizeOptionalVaultPath",
+      "kind": "FunctionDeclaration",
+      "line": 5912
+    },
+    {
+      "name": "ensureMarkdownExtension",
+      "kind": "FunctionDeclaration",
+      "line": 5922
+    },
+    {
+      "name": "removeSideNotesBundleExtension",
+      "kind": "FunctionDeclaration",
+      "line": 5926
+    },
+    {
+      "name": "getSafeTimestamp",
+      "kind": "FunctionDeclaration",
+      "line": 5930
+    },
+    {
+      "name": "getFileNameFromPath",
+      "kind": "FunctionDeclaration",
+      "line": 5938
+    },
+    {
+      "name": "getLeafFileName",
+      "kind": "FunctionDeclaration",
+      "line": 5943
+    },
+    {
+      "name": "sanitizeFileName",
+      "kind": "FunctionDeclaration",
+      "line": 5947
+    },
+    {
+      "name": "extractInternalLinkPaths",
+      "kind": "FunctionDeclaration",
+      "line": 5954
+    },
+    {
+      "name": "getInternalLinkPath",
+      "kind": "FunctionDeclaration",
+      "line": 5978
+    },
+    {
+      "name": "stripMarkdownLinkDestination",
+      "kind": "FunctionDeclaration",
+      "line": 5998
+    },
+    {
+      "name": "isExternalOrSpecialLink",
+      "kind": "FunctionDeclaration",
+      "line": 6019
+    },
+    {
+      "name": "decodeUriSafely",
+      "kind": "FunctionDeclaration",
+      "line": 6023
+    },
+    {
+      "name": "arrayBufferToBase64",
+      "kind": "FunctionDeclaration",
+      "line": 6031
+    },
+    {
+      "name": "base64ToArrayBuffer",
+      "kind": "FunctionDeclaration",
+      "line": 6043
+    },
+    {
+      "name": "getFirstNoteLine",
+      "kind": "FunctionDeclaration",
+      "line": 6054
+    },
+    {
+      "name": "getBlockLabel",
+      "kind": "FunctionDeclaration",
+      "line": 6063
+    },
+    {
+      "name": "getCurrentViewModeIcon",
+      "kind": "FunctionDeclaration",
+      "line": 6079
+    },
+    {
+      "name": "getCurrentViewModeLabel",
+      "kind": "FunctionDeclaration",
+      "line": 6095
+    },
+    {
+      "name": "getSelectAllTooltip",
+      "kind": "FunctionDeclaration",
+      "line": 6111
+    },
+    {
+      "name": "getClearAllTooltip",
+      "kind": "FunctionDeclaration",
+      "line": 6127
+    },
+    {
+      "name": "getFileCardKey",
+      "kind": "FunctionDeclaration",
+      "line": 6143
+    },
+    {
+      "name": "getFileNoteCount",
+      "kind": "FunctionDeclaration",
+      "line": 6147
+    },
+    {
+      "name": "formatCount",
+      "kind": "FunctionDeclaration",
+      "line": 6151
+    },
+    {
+      "name": "isImageNote",
+      "kind": "FunctionDeclaration",
+      "line": 6155
+    },
+    {
+      "name": "isAudioNote",
+      "kind": "FunctionDeclaration",
+      "line": 6159
+    },
+    {
+      "name": "isVideoNote",
+      "kind": "FunctionDeclaration",
+      "line": 6163
+    },
+    {
+      "name": "isFileNote",
+      "kind": "FunctionDeclaration",
+      "line": 6167
+    },
+    {
+      "name": "isStoredFileNote",
+      "kind": "FunctionDeclaration",
+      "line": 6174
+    },
+    {
+      "name": "isExternalFileNote",
+      "kind": "FunctionDeclaration",
+      "line": 6178
+    },
+    {
+      "name": "isUrlNote",
+      "kind": "FunctionDeclaration",
+      "line": 6182
+    },
+    {
+      "name": "isTextNote",
+      "kind": "FunctionDeclaration",
+      "line": 6186
+    },
+    {
+      "name": "getSideNoteMediaPath",
+      "kind": "FunctionDeclaration",
+      "line": 6190
+    },
+    {
+      "name": "getSideNoteMediaPathsFromBlocks",
+      "kind": "FunctionDeclaration",
+      "line": 6210
+    },
+    {
+      "name": "remapSideNoteMediaPaths",
+      "kind": "FunctionDeclaration",
+      "line": 6226
+    },
+    {
+      "name": "getRemappedSideNoteMediaPath",
+      "kind": "FunctionDeclaration",
+      "line": 6246
+    },
+    {
+      "name": "getSideNoteSummaryText",
+      "kind": "FunctionDeclaration",
+      "line": 6255
+    },
+    {
+      "name": "clampImageZoom",
+      "kind": "FunctionDeclaration",
+      "line": 6280
+    },
+    {
+      "name": "clampImageFrameHeight",
+      "kind": "FunctionDeclaration",
+      "line": 6284
+    },
+    {
+      "name": "clampImageFrameScale",
+      "kind": "FunctionDeclaration",
+      "line": 6288
+    },
+    {
+      "name": "getImageFrameScale",
+      "kind": "FunctionDeclaration",
+      "line": 6292
+    },
+    {
+      "name": "clampImagePanOffset",
+      "kind": "FunctionDeclaration",
+      "line": 6305
+    },
+    {
+      "name": "normalizeImageRotation",
+      "kind": "FunctionDeclaration",
+      "line": 6309
+    },
+    {
+      "name": "getClipboardMediaFile",
+      "kind": "FunctionDeclaration",
+      "line": 6318
+    },
+    {
+      "name": "getClipboardMediaKind",
+      "kind": "FunctionDeclaration",
+      "line": 6354
+    },
+    {
+      "name": "normalizeClipboardMediaFile",
+      "kind": "FunctionDeclaration",
+      "line": 6370
+    },
+    {
+      "name": "isAcceptedImageFile",
+      "kind": "FunctionDeclaration",
+      "line": 6385
+    },
+    {
+      "name": "getSafeImageFileName",
+      "kind": "FunctionDeclaration",
+      "line": 6389
+    },
+    {
+      "name": "getImageExtension",
+      "kind": "FunctionDeclaration",
+      "line": 6398
+    },
+    {
+      "name": "isAcceptedAudioFile",
+      "kind": "FunctionDeclaration",
+      "line": 6416
+    },
+    {
+      "name": "isAcceptedVideoFile",
+      "kind": "FunctionDeclaration",
+      "line": 6420
+    },
+    {
+      "name": "getSafeAudioFileName",
+      "kind": "FunctionDeclaration",
+      "line": 6424
+    },
+    {
+      "name": "getAudioExtension",
+      "kind": "FunctionDeclaration",
+      "line": 6433
+    },
+    {
+      "name": "getSafeVideoFileName",
+      "kind": "FunctionDeclaration",
+      "line": 6451
+    },
+    {
+      "name": "getVideoExtension",
+      "kind": "FunctionDeclaration",
+      "line": 6460
+    },
+    {
+      "name": "getSafeGenericFileName",
+      "kind": "FunctionDeclaration",
+      "line": 6474
+    },
+    {
+      "name": "getFileNoteDisplayPath",
+      "kind": "FunctionDeclaration",
+      "line": 6482
+    },
+    {
+      "name": "normalizeSideNoteUrl",
+      "kind": "FunctionDeclaration",
+      "line": 6494
+    },
+    {
+      "name": "looksLikeSideNoteUrl",
+      "kind": "FunctionDeclaration",
+      "line": 6507
+    },
+    {
+      "name": "getUrlDisplayName",
+      "kind": "FunctionDeclaration",
+      "line": 6516
+    },
+    {
+      "name": "openUrlExternally",
+      "kind": "FunctionDeclaration",
+      "line": 6537
+    },
+    {
+      "name": "openFilePathExternally",
+      "kind": "FunctionDeclaration",
+      "line": 6546
+    },
+    {
+      "name": "pathToFileUrl",
+      "kind": "FunctionDeclaration",
+      "line": 6555
+    },
+    {
+      "name": "getPreferredAudioRecordingMimeType",
+      "kind": "FunctionDeclaration",
+      "line": 6580
+    },
+    {
+      "name": "formatDuration",
+      "kind": "FunctionDeclaration",
+      "line": 6595
+    },
+    {
+      "name": "makeId",
+      "kind": "FunctionDeclaration",
+      "line": 6602
+    },
+    {
+      "name": "makeSideNotesId",
+      "kind": "FunctionDeclaration",
+      "line": 6606
+    },
+    {
+      "name": "normalizeSideNotesId",
+      "kind": "FunctionDeclaration",
+      "line": 6610
+    },
+    {
+      "name": "makeRandomIdPart",
+      "kind": "FunctionDeclaration",
+      "line": 6620
+    },
+    {
+      "name": "sanitizeBlockPrefix",
+      "kind": "FunctionDeclaration",
+      "line": 6629
+    },
+    {
+      "name": "isFenceLine",
+      "kind": "FunctionDeclaration",
+      "line": 6638
+    },
+    {
+      "name": "addToolbarButton",
+      "kind": "FunctionDeclaration",
+      "line": 6642
+    },
+    {
+      "name": "addToolbarIconButton",
+      "kind": "FunctionDeclaration",
+      "line": 6660
+    },
+    {
+      "name": "addIconButton",
+      "kind": "FunctionDeclaration",
+      "line": 6678
+    },
+    {
+      "name": "markDeleteButton",
+      "kind": "FunctionDeclaration",
+      "line": 6687
+    },
+    {
+      "name": "markClearSelectionButton",
+      "kind": "FunctionDeclaration",
+      "line": 6692
+    },
+    {
+      "name": "blurActiveElement",
+      "kind": "FunctionDeclaration",
+      "line": 6697
+    },
+    {
+      "name": "copyTextToClipboard",
+      "kind": "FunctionDeclaration",
+      "line": 6704
+    },
+    {
+      "name": "copyRichContentToClipboard",
+      "kind": "FunctionDeclaration",
+      "line": 6727
+    },
+    {
+      "name": "getSideNoteImageClipboardBlob",
+      "kind": "FunctionDeclaration",
+      "line": 6774
+    },
+    {
+      "name": "convertImageBlobToPng",
+      "kind": "FunctionDeclaration",
+      "line": 6795
+    },
+    {
+      "name": "buildSideNotesClipboardHtml",
+      "kind": "FunctionDeclaration",
+      "line": 6832
+    },
+    {
+      "name": "getNoteRichCopyHtml",
+      "kind": "FunctionDeclaration",
+      "line": 6841
+    },
+    {
+      "name": "getSideNoteMediaDataUrl",
+      "kind": "FunctionDeclaration",
+      "line": 6880
+    },
+    {
+      "name": "getClipboardTextBlockHtml",
+      "kind": "FunctionDeclaration",
+      "line": 6901
+    },
+    {
+      "name": "getMediaMimeTypeFromPath",
+      "kind": "FunctionDeclaration",
+      "line": 6906
+    },
+    {
+      "name": "escapeHtml",
+      "kind": "FunctionDeclaration",
+      "line": 6947
+    },
+    {
+      "name": "escapeHtmlAttribute",
+      "kind": "FunctionDeclaration",
+      "line": 6956
+    },
+    {
+      "name": "applyNoteDirection",
+      "kind": "FunctionDeclaration",
+      "line": 6960
+    },
+    {
+      "name": "applyNoteEditorStyles",
+      "kind": "FunctionDeclaration",
+      "line": 6972
+    },
+    {
+      "name": "enableTextareaAutoResize",
+      "kind": "FunctionDeclaration",
+      "line": 6983
+    },
+    {
+      "name": "resizeTextarea",
+      "kind": "FunctionDeclaration",
+      "line": 6988
+    },
+    {
+      "name": "setEditTextareaInitialHeight",
+      "kind": "FunctionDeclaration",
+      "line": 6993
+    },
+    {
+      "name": "getElementTopRelativeTo",
+      "kind": "FunctionDeclaration",
+      "line": 7001
+    },
+    {
+      "name": "restoreElementTopRelativeTo",
+      "kind": "FunctionDeclaration",
+      "line": 7005
+    },
+    {
+      "name": "getDatasetList",
+      "kind": "FunctionDeclaration",
+      "line": 7014
+    },
+    {
+      "name": "joinMergedNoteTexts",
+      "kind": "FunctionDeclaration",
+      "line": 7018
+    },
+    {
+      "name": "trimOuterBlankLines",
+      "kind": "FunctionDeclaration",
+      "line": 7025
+    },
+    {
+      "name": "getNoteExportMarkdown",
+      "kind": "FunctionDeclaration",
+      "line": 7031
+    },
+    {
+      "name": "getNotePlainCopyText",
+      "kind": "FunctionDeclaration",
+      "line": 7061
+    },
+    {
+      "name": "escapeMarkdownLinkText",
+      "kind": "FunctionDeclaration",
+      "line": 7078
+    },
+    {
+      "name": "getNoteFontFamilyCssValue",
+      "kind": "FunctionDeclaration",
+      "line": 7082
+    },
+    {
+      "name": "getUniqueFontFamilies",
+      "kind": "FunctionDeclaration",
+      "line": 7087
+    },
+    {
+      "name": "getInstalledFontFamilies",
+      "kind": "FunctionDeclaration",
+      "line": 7105
+    },
+    {
+      "name": "enableMarkdownListContinuation",
+      "kind": "FunctionDeclaration",
+      "line": 7122
+    },
+    {
+      "name": "getNextListMarker",
+      "kind": "FunctionDeclaration",
+      "line": 7154
+    },
+    {
+      "name": "replaceTextareaRange",
+      "kind": "FunctionDeclaration",
+      "line": 7168
+    },
+    {
+      "name": "wrapSelection",
+      "kind": "FunctionDeclaration",
+      "line": 7177
+    },
+    {
+      "name": "applyBulletList",
+      "kind": "FunctionDeclaration",
+      "line": 7195
+    },
+    {
+      "name": "applyTaskList",
+      "kind": "FunctionDeclaration",
+      "line": 7199
+    },
+    {
+      "name": "applyNumberedList",
+      "kind": "FunctionDeclaration",
+      "line": 7203
+    },
+    {
+      "name": "indentSelectedLines",
+      "kind": "FunctionDeclaration",
+      "line": 7207
+    },
+    {
+      "name": "outdentSelectedLines",
+      "kind": "FunctionDeclaration",
+      "line": 7211
+    },
+    {
+      "name": "transformSelectedLines",
+      "kind": "FunctionDeclaration",
+      "line": 7229
+    },
+    {
+      "name": "applyLinePrefixes",
+      "kind": "FunctionDeclaration",
+      "line": 7247
+    },
+    {
+      "name": "getLineWithoutListMarker",
+      "kind": "FunctionDeclaration",
+      "line": 7285
+    },
+    {
+      "name": "createBlockIdHiderExtension",
+      "kind": "FunctionDeclaration",
+      "line": 7301
+    },
+    {
+      "name": "update",
+      "kind": "MethodDeclaration",
+      "line": 7313
+    },
+    {
+      "name": "buildBlockIdDecorations",
+      "kind": "FunctionDeclaration",
+      "line": 7411
+    },
+    {
+      "name": "getProtectedBlockIdRanges",
+      "kind": "FunctionDeclaration",
+      "line": 7428
+    },
+    {
+      "name": "changeTouchesProtectedRanges",
+      "kind": "FunctionDeclaration",
+      "line": 7443
+    },
+    {
+      "name": "changeTouchesProtectedRange",
+      "kind": "FunctionDeclaration",
+      "line": 7447
+    },
+    {
+      "name": "getUnprotectedDeletionRanges",
+      "kind": "FunctionDeclaration",
+      "line": 7455
+    },
+    {
+      "name": "getStandaloneProtectedRangeMoveAfterParagraphBreak",
+      "kind": "FunctionDeclaration",
+      "line": 7481
+    },
+    {
+      "name": "changeCanBeRedirectedAroundProtectedRange",
+      "kind": "FunctionDeclaration",
+      "line": 7530
+    },
+    {
+      "name": "getProtectedRangeInsertPosition",
+      "kind": "FunctionDeclaration",
+      "line": 7542
+    },
+    {
+      "name": "escapeRegExp",
+      "kind": "FunctionDeclaration",
+      "line": 7546
+    }
+  ],
+  "commands": [
+    {
+      "line": 321,
+      "properties": [
+        {
+          "key": "id",
+          "value": "\"open-paragraph-notes\""
+        },
+        {
+          "key": "name",
+          "value": "\"Open sidebar\""
+        }
+      ]
+    },
+    {
+      "line": 329,
+      "properties": [
+        {
+          "key": "id",
+          "value": "\"toggle-new-note-composer\""
+        },
+        {
+          "key": "name",
+          "value": "\"Toggle new note\""
+        }
+      ]
+    },
+    {
+      "line": 343,
+      "properties": [
+        {
+          "key": "id",
+          "value": "\"import-sidenotes-bundle\""
+        },
+        {
+          "key": "name",
+          "value": "\"Import transfer file\""
+        }
+      ]
+    },
+    {
+      "line": 351,
+      "properties": [
+        {
+          "key": "id",
+          "value": "\"export-full-sidenotes-backup\""
+        },
+        {
+          "key": "name",
+          "value": "\"Export full backup\""
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "line": 308,
+      "argument": "VIEW_TYPE_SIDE_NOTES"
+    }
+  ],
+  "protocols": [],
+  "settings": [
+    "anchorStorage",
+    "autoInsertBlockIds",
+    "blockIdPrefix",
+    "buttonSizePx",
+    "confirmBeforeDelete",
+    "defaultNotesExpanded",
+    "exportBlankLineBetweenNotes",
+    "headerCollapsed",
+    "headerFontSizePx",
+    "hidePluginBlockIds",
+    "includeOrphanedInFullExport",
+    "noteDirection",
+    "noteEditorFontSizePx",
+    "noteFontFamily",
+    "noteFontSizePx",
+    "noteOpenFontSizePx",
+    "notePreviewFontSizePx",
+    "storeSideNoteIDInProperties",
+    "updateDebounceMs",
+    "updateOnSelectionChange"
+  ]
+}
