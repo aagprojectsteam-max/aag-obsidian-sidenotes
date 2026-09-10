@@ -1,6 +1,10 @@
 {
-  "publication": "BLOCKED_IDENTITY_DECISION",
-  "license": "EXISTING_MIT_PRESERVED; OWNER_PROVENANCE_REVIEW_PENDING",
-  "identity": "CURRENT_WORKING_ID_NOT_A_PUBLICATION_DECISION",
-  "runtime": "SAFETY_FIXES_NOT_DEPLOYED"
+  "publication": "LOCAL_GATES_PASSED",
+  "license": "PUBLIC_UPSTREAM_MIT_PRESERVED",
+  "identity": "context-aware-paragraph-notes",
+  "production_deployment": "NOT_PERFORMED",
+  "acceptance_limits": [
+    "Real Obsidian migration and mobile GUI not exercised",
+    "Multi-file import uses fail-closed recovery journal, not global filesystem atomicity"
+  ]
 }

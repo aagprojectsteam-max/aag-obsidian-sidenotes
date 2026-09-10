@@ -1,6 +1,6 @@
 # SideNotes
 
-Local engineering candidate: publication is blocked pending the historical-ID versus aag-sidenotes migration decision. This staging root runtime is the built candidate; the original development runtime is unchanged. See DEVELOPMENT.md.
+SideNotes adds paragraph-linked sidebar notes, media and exports. This AAG-maintained continuation preserves the historical plugin ID `context-aware-paragraph-notes`.
 
 SideNotes is an Obsidian plugin for writing sidebar notes that stay connected to the paragraph you are reading or editing.
 
@@ -106,3 +106,24 @@ This plugin is in active development. It is already usable, but please keep back
 ## License
 
 MIT
+
+
+## 0.2.1 safety and continuity
+
+This continuation is based on [AAG's existing MIT SideNotes source](https://github.com/adirgalon-dev/Obsidian-Plugin-Side-Notes), whose public release is 0.2.0. The original MIT copyright notice is retained. This repository contains a clean source history; it does not claim to transfer ownership of the original repository or its Community listing.
+
+Keep only one SideNotes installation enabled. The historical ID remains `context-aware-paragraph-notes`; do not also enable a local `aag-sidenotes` installation. See [migration and rollback](docs/migration.md). Minimum tested development host is Obsidian 1.13.7. Mobile, theme and live migration acceptance are not claimed by the synthetic test suite.
+
+Corrupt stores stop loading without replacement. Store saves verify a temporary file before adapter rename. Imports preflight paths and binary data, preserve existing files through unique names, and keep a recovery journal. Multi-file imports are **not globally atomic**: a crash can leave newly imported files and media. On interruption, loading and further saves stop to preserve recovery evidence. See [import recovery](docs/import-recovery.md); do not delete an unexplained journal or replace valid notes with empty data.
+
+## Installation and updates
+
+Download `main.js`, `manifest.json` and `styles.css` from [release 0.2.1](https://github.com/aagprojectsteam-max/aag-obsidian-sidenotes/releases/tag/0.2.1). With both SideNotes identities disabled and a consistent backup made, place the files under `.obsidian/plugins/context-aware-paragraph-notes/`. Preserve your existing `data.json`. Test a disposable copy before using migration or restore on valuable notes.
+
+For BRAT, use `aagprojectsteam-max/aag-obsidian-sidenotes`. Remove the old repository tracking entry after backup if it points to the same plugin identity; do not let two tracked repositories alternate versions. This release has not been submitted as a new Community entry.
+
+## Privacy and development
+
+Notes, IDs and attachments are stored in your vault. Commands can write Markdown frontmatter/anchors, import files and access the clipboard or user-selected media; linked images or external links may use their destinations when displayed/opened. No telemetry, accounts or paid service is required. Local font/audio/clipboard features depend on host permissions. No automatic updater is included.
+
+Run `npm ci --ignore-scripts`, then `npm run verify`. Build output stays under `dist/build`; release packaging allowlists three runtime assets and never includes local settings. TypeScript and host Obsidian/CodeMirror packages are development/external dependencies, not copied implementations in the plugin bundle.

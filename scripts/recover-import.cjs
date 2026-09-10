@@ -1,0 +1,5 @@
+// Offline recovery export: never writes a vault or deletes journal/imported files.
+const fs=require('node:fs'),assert=require('node:assert/strict');
+function recoveryExport(raw){const j=JSON.parse(raw);assert.equal(j.version,1);assert.equal(j.state,'pending');assert.ok(j.before&&typeof j.before==='object'&&!Array.isArray(j.before));const store=j.completed??j.before;for(const key of ['files','sideNoteIds','filesBySideNoteId'])assert.ok(store[key]&&typeof store[key]==='object'&&!Array.isArray(store[key]));return {store:structuredClone(store),before:structuredClone(j.before),createdPaths:j.createdPaths??[],uncompletedTransferBundle:j.bundle,requiresReview:true};}
+if(require.main===module){const [input,output]=process.argv.slice(2);assert.ok(input&&output,'Usage: node scripts/recover-import.cjs JOURNAL NEW_RECOVERY_EXPORT');fs.writeFileSync(output,JSON.stringify(recoveryExport(fs.readFileSync(input,'utf8')),null,2),{flag:'wx'});console.log('Recovery export created; original journal, store and note files were preserved.');}
+module.exports={recoveryExport};

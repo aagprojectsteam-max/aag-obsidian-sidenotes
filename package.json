@@ -1,6 +1,6 @@
 {
   "name": "aag-sidenotes",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Obsidian plugin for sidebar notes linked to the paragraph under the cursor.",
   "main": "main.js",
   "scripts": {
@@ -9,9 +9,10 @@
     "test:full": "node scripts/test.cjs",
     "test": "node scripts/test.cjs",
     "typecheck": "tsc --noEmit --skipLibCheck",
-    "verify": "npm run typecheck && npm test && npm run build",
+    "verify": "npm run typecheck && npm test && npm run build && npm run release:stage && npm run release:check && node scripts/publication-gates.cjs",
     "release:stage": "node scripts/release.cjs stage",
-    "release:check": "node scripts/release.cjs check"
+    "release:check": "node scripts/release.cjs check",
+    "release:tag": "node scripts/publication-gates.cjs tag"
   },
   "keywords": [
     "obsidian",

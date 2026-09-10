@@ -285,6 +285,8 @@ const DEFAULT_DATA: SideNotesData = {
   filesBySideNoteId: {}
 };
 const DRAFT_UNDO_LIMIT = 100;
+const IMPORT_JOURNAL = "_SideNotes/.import-pending.json";
+const SIDE_NOTES_OWNER = Symbol.for("aag.sidenotes.store-owner");
 
 export default class SideNotesPlugin extends Plugin {
   settings: SideNotesSettings;
@@ -294,9 +296,38 @@ export default class SideNotesPlugin extends Plugin {
   private lastMarkdownView: MarkdownView | null = null;
   private suppressContextRefreshUntil = 0;
 
+  private importInProgress = false;
+  private importCreated: TFile[] | null = null;
+  private storeSaveQueue: Promise<void> = Promise.resolve();
+
+  acquireStoreOwnership() {
+    const host = this.app as unknown as Record<symbol, unknown>;
+    const installed = (this.app as unknown as { plugins?: { plugins?: Record<string, unknown> } }).plugins?.plugins ?? {};
+    for (const id of ["context-aware-paragraph-notes", "aag-sidenotes"]) {
+      if (installed[id] && installed[id] !== this) throw new Error("Disable the other SideNotes installation before enabling this plugin.");
+    }
+    if (host[SIDE_NOTES_OWNER] && host[SIDE_NOTES_OWNER] !== this) throw new Error("Another SideNotes instance owns this vault store.");
+    host[SIDE_NOTES_OWNER] = this;
+  }
+
+  assertStoreOwnership() {
+    const installed = (this.app as unknown as { plugins?: { plugins?: Record<string, unknown> } }).plugins?.plugins ?? {};
+    for (const id of ["context-aware-paragraph-notes", "aag-sidenotes"]) {
+      if (installed[id] && installed[id] !== this) throw new Error("Disable the other SideNotes installation before writing notes.");
+    }
+    const host = this.app as unknown as Record<symbol, unknown>;
+    if (host[SIDE_NOTES_OWNER] && host[SIDE_NOTES_OWNER] !== this) throw new Error("Another SideNotes instance owns this vault store.");
+  }
+
   async onload() {
-    await this.loadSettings();
-    await this.loadSideNotesData();
+    this.acquireStoreOwnership();
+    try {
+      await this.loadSettings();
+      await this.loadSideNotesData();
+    } catch (error) {
+      this.onunload();
+      throw error;
+    }
     void this.migrateLegacySideNotesIDProperties();
 
     this.debouncedRefresh = debounce(
@@ -408,6 +439,8 @@ export default class SideNotesPlugin extends Plugin {
   }
 
   onunload() {
+    const host = this.app as unknown as Record<symbol, unknown>;
+    if (host[SIDE_NOTES_OWNER] === this) delete host[SIDE_NOTES_OWNER];
     // Keep the sidebar leaf in place so Obsidian preserves the user's layout.
   }
 
@@ -490,6 +523,10 @@ export default class SideNotesPlugin extends Plugin {
   }
 
   async loadSideNotesData() {
+    this.assertStoreOwnership();
+    if (await this.app.vault.adapter.exists(IMPORT_JOURNAL)) {
+      throw new Error("An interrupted SideNotes import needs recovery. Preserve the journal, store and imported files before recovery; no data was changed on load.");
+    }
     const externalData = await this.loadExternalSideNotesData();
     if (externalData) {
       this.sideNotesData = this.normalizeSideNotesData(externalData);
@@ -549,6 +586,7 @@ export default class SideNotesPlugin extends Plugin {
   }
 
   async ensureSideNoteIDProperty(file: TFile, sideNoteId: string, force = false) {
+    this.assertStoreOwnership();
     if (!force && !this.settings.storeSideNoteIDInProperties) {
       return;
     }
@@ -631,15 +669,30 @@ export default class SideNotesPlugin extends Plugin {
     }
   }
 
-  async saveSideNotesData() {
-    if (!(await this.app.vault.adapter.exists(SIDE_NOTES_FOLDER))) {
-      await this.app.vault.createFolder(SIDE_NOTES_FOLDER);
-    }
-
-    await this.app.vault.adapter.write(
-      SIDE_NOTES_DATA_PATH,
-      JSON.stringify(this.sideNotesData, null, 2)
-    );
+  async saveSideNotesData(importCommit = false) {
+    this.assertStoreOwnership();
+    if (this.importInProgress && !importCommit) throw new Error("Store save paused during import.");
+    const serialized = JSON.stringify(this.sideNotesData, null, 2);
+    const run = this.storeSaveQueue.then(async () => {
+      this.assertStoreOwnership();
+      if (!importCommit && await this.app.vault.adapter.exists(IMPORT_JOURNAL)) throw new Error("Recover the interrupted import before saving.");
+      if (!(await this.app.vault.adapter.exists(SIDE_NOTES_FOLDER))) {
+        await this.app.vault.createFolder(SIDE_NOTES_FOLDER);
+      }
+      const temporary = `${SIDE_NOTES_DATA_PATH}.${crypto.randomUUID()}.pending`;
+      try {
+        await this.app.vault.adapter.write(temporary, serialized);
+        if (await this.app.vault.adapter.read(temporary) !== serialized) throw new Error("SideNotes staged store verification failed.");
+        // Adapter rename is a single filesystem operation on supported desktop adapters.
+        // Failure preserves the existing store; never truncate it in place.
+        await this.app.vault.adapter.rename(temporary, SIDE_NOTES_DATA_PATH);
+      } catch (error) {
+        if (await this.app.vault.adapter.exists(temporary)) await this.app.vault.adapter.remove(temporary);
+        throw error;
+      }
+    });
+    this.storeSaveQueue = run.catch(() => {});
+    return run;
   }
 
   normalizeSideNotesData(data: SideNotesData): SideNotesData {
@@ -1245,22 +1298,61 @@ export default class SideNotesPlugin extends Plugin {
   }
 
   async importSideNotesBundleText(rawBundle: string): Promise<SideNotesImportResult> {
+    this.assertStoreOwnership();
+    if (this.importInProgress) throw new Error("A SideNotes import is already running.");
     const bundle = parseSideNotesTransferBundle(rawBundle);
-    let fileCount = 0;
-    let noteCount = 0;
-    let attachmentCount = 0;
-    const importedAttachmentPaths = new Map<string, string>();
-
-    for (const transferFile of bundle.files) {
-      const importResult = await this.importSideNotesTransferFile(transferFile, importedAttachmentPaths);
-      fileCount += 1;
-      noteCount += importResult.noteCount;
-      attachmentCount += importResult.attachmentCount;
+    // Complete path/attachment preflight before the first filesystem mutation.
+    const attachmentBytes = new Map<string, string>();
+    for (const file of bundle.files) {
+      for (const value of [file.path, ...file.attachments.map(attachment => attachment.path)]) {
+        const safe = sanitizeOptionalVaultPath(value);
+        if (!safe || safe.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() ||
+            safe === SIDE_NOTES_DATA_PATH || safe === IMPORT_JOURNAL) throw new Error("Unsafe import path.");
+      }
+      for (const attachment of file.attachments) {
+        base64ToArrayBuffer(attachment.data);
+        if (attachmentBytes.has(attachment.path) && attachmentBytes.get(attachment.path) !== attachment.data) throw new Error("Conflicting attachment bytes.");
+        attachmentBytes.set(attachment.path, attachment.data);
+      }
     }
-
-    await this.savePluginState();
-    this.refreshViews();
-    return { fileCount, noteCount, attachmentCount };
+    if (await this.app.vault.adapter.exists(IMPORT_JOURNAL)) throw new Error("Recover the previous interrupted import first.");
+    this.importInProgress = true;
+    const before = JSON.stringify(this.sideNotesData);
+    const created: TFile[] = [];
+    this.importCreated = created;
+    let committed = false;
+    try {
+      await this.ensureVaultFolder(SIDE_NOTES_FOLDER);
+      // Durable pre-import state and complete validated payload survive process interruption.
+      const journal = JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), bundle });
+      await this.app.vault.adapter.write(IMPORT_JOURNAL, journal);
+      if (await this.app.vault.adapter.read(IMPORT_JOURNAL) !== journal) throw new Error("Import journal verification failed.");
+      await this.storeSaveQueue;
+      let noteCount = 0, attachmentCount = 0;
+      const importedAttachmentPaths = new Map<string, string>();
+      for (const transferFile of bundle.files) {
+        const result = await this.importSideNotesTransferFile(transferFile, importedAttachmentPaths);
+        noteCount += result.noteCount;
+        attachmentCount += result.attachmentCount;
+        await this.app.vault.adapter.write(IMPORT_JOURNAL, JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), completed: this.sideNotesData, createdPaths: created.map(file => file.path), bundle }));
+      }
+      await this.saveSideNotesData(true);
+      committed = true;
+      await this.app.vault.adapter.remove(IMPORT_JOURNAL);
+      this.refreshViews();
+      return { fileCount: bundle.files.length, noteCount, attachmentCount };
+    } catch (error) {
+      if (!committed) {
+        this.sideNotesData = JSON.parse(before);
+        // Keep created Markdown/media and the durable journal on failure: host events,
+        // sync or the user may already have edited them. Never delete potentially valid notes.
+        // No partial import is reported as successful. Recovery is explicit and fail-closed.
+      }
+      throw error;
+    } finally {
+      this.importCreated = null;
+      this.importInProgress = false;
+    }
   }
 
   async importSideNotesTransferFile(transferFile: SideNotesTransferFile, importedAttachmentPaths = new Map<string, string>()): Promise<{ noteCount: number; attachmentCount: number }> {
@@ -1279,6 +1371,7 @@ export default class SideNotesPlugin extends Plugin {
     remapSideNoteMediaPaths(blocks, importedAttachments.pathMap);
 
     const importedFile = await this.app.vault.create(importPath, transferFile.content ?? "");
+    this.importCreated?.push(importedFile);
     await this.ensureSideNoteIDProperty(importedFile, sideNoteId, true);
 
     this.sideNotesData.sideNoteIds[importedFile.path] = sideNoteId;
@@ -1323,12 +1416,13 @@ export default class SideNotesPlugin extends Plugin {
         }
 
         await this.ensureVaultFolder(getFolderPath(targetPath));
-        await this.app.vault.createBinary(targetPath, base64ToArrayBuffer(attachment.data));
+        const created = await this.app.vault.createBinary(targetPath, base64ToArrayBuffer(attachment.data));
+        this.importCreated?.push(created);
         pathMap.set(attachmentPath, targetPath);
         importedAttachmentPaths.set(attachmentPath, targetPath);
         attachmentCount += 1;
       } catch (error) {
-        console.error(error);
+        throw new Error("SideNotes attachment import failed; recovery data was preserved.");
       }
     }
 
@@ -5790,12 +5884,12 @@ function parseSideNotesTransferAttachments(value: unknown): SideNotesTransferAtt
   const attachments: SideNotesTransferAttachment[] = [];
   for (const attachment of value) {
     if (!isRecord(attachment) || typeof attachment.path !== "string" || typeof attachment.data !== "string") {
-      continue;
+      throw new Error("Invalid SideNotes attachment.");
     }
 
     const path = sanitizeOptionalVaultPath(attachment.path);
     if (!path) {
-      continue;
+      throw new Error("Unsafe SideNotes attachment path.");
     }
 
     attachments.push({
