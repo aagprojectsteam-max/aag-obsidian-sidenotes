@@ -1,5 +1,5 @@
 {
-  "publication": "LOCAL_READY_AUTOMATIC_APPROVAL_REVIEW_BLOCKED_PUBLICATION",
+  "publication": "PUBLICATION_AUTHORIZED_0.2.1",
   "license": "PUBLIC_UPSTREAM_MIT_PRESERVED",
   "identity": "context-aware-paragraph-notes",
   "production_deployment": "NOT_PERFORMED",
@@ -7,5 +7,5 @@
     "Real Obsidian migration and mobile GUI not exercised",
     "Multi-file import uses fail-closed recovery journal, not global filesystem atomicity"
   ],
-  "remote": "NONE"
+  "repository": "https://github.com/aagprojectsteam-max/aag-obsidian-sidenotes"
 }
