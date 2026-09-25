@@ -360,12 +360,6 @@ export default class SideNotesPlugin extends Plugin {
     this.addCommand({
       id: "toggle-new-note-composer",
       name: "Toggle new note",
-      hotkeys: [
-        {
-          modifiers: ["Shift"],
-          key: "PageUp"
-        }
-      ],
       callback: () => {
         void this.toggleNewNoteComposer();
       }
@@ -1349,9 +1343,8 @@ export default class SideNotesPlugin extends Plugin {
       const attachmentBytes = new Map<string, string>();
       for (const file of bundle.files) {
         for (const value of [file.path, ...file.attachments.map((attachment) => attachment.path)]) {
-          const safe = sanitizeOptionalVaultPath(value);
+          const safe = sanitizeOptionalVaultPath(value, this.app.vault.configDir);
           if (!safe ||
-              safe.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() ||
               safe === SIDE_NOTES_DATA_PATH ||
               safe === IMPORT_JOURNAL) {
             throw new Error("Unsafe import path.");
@@ -5523,7 +5516,7 @@ class SideNotesSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("AAG - Side Notes settings")
+      .setName("AAG - Side Notes")
       .setHeading();
 
     new Setting(containerEl)
@@ -5689,7 +5682,7 @@ class SideNotesSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.includeOrphanedInFullExport = value;
             await this.plugin.saveSettings();
-            this.display();
+            this.update();
           });
       });
 
@@ -6202,12 +6195,19 @@ function sanitizeVaultPath(path: string): string {
   return sanitizeOptionalVaultPath(path) ?? "Imported side notes.md";
 }
 
-function sanitizeOptionalVaultPath(path: string): string | null {
+function sanitizeOptionalVaultPath(path: string, protectedConfigDir?: string): string | null {
   const normalizedPath = path.replace(/\\/g, "/");
   if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath)) return null;
   const parts = normalizedPath.split("/").filter((part) => part.length > 0);
   if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
-      parts[0]?.toLowerCase() === ".obsidian" || parts[0]?.toLowerCase() === ".git") return null;
+      parts[0]?.toLowerCase() === ".git") return null;
+
+  if (protectedConfigDir) {
+    const configPath = protectedConfigDir.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").toLowerCase();
+    const candidate = parts.join("/").toLowerCase();
+    if (configPath && (candidate === configPath || candidate.startsWith(`${configPath}/`))) return null;
+  }
+
   const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
   return sanitizedParts.join("/") || null;
 }

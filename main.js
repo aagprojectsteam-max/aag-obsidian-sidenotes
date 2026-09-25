@@ -127,12 +127,6 @@ class SideNotesPlugin extends obsidian_1.Plugin {
         this.addCommand({
             id: "toggle-new-note-composer",
             name: "Toggle new note",
-            hotkeys: [
-                {
-                    modifiers: ["Shift"],
-                    key: "PageUp"
-                }
-            ],
             callback: () => {
                 void this.toggleNewNoteComposer();
             }
@@ -964,9 +958,8 @@ class SideNotesPlugin extends obsidian_1.Plugin {
             const attachmentBytes = new Map();
             for (const file of bundle.files) {
                 for (const value of [file.path, ...file.attachments.map((attachment) => attachment.path)]) {
-                    const safe = sanitizeOptionalVaultPath(value);
+                    const safe = sanitizeOptionalVaultPath(value, this.app.vault.configDir);
                     if (!safe ||
-                        safe.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() ||
                         safe === SIDE_NOTES_DATA_PATH ||
                         safe === IMPORT_JOURNAL) {
                         throw new Error("Unsafe import path.");
@@ -4499,7 +4492,7 @@ class SideNotesSettingTab extends obsidian_1.PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
         new obsidian_1.Setting(containerEl)
-            .setName("AAG - Side Notes settings")
+            .setName("AAG - Side Notes")
             .setHeading();
         new obsidian_1.Setting(containerEl)
             .setName("Paragraph anchor storage")
@@ -4652,7 +4645,7 @@ class SideNotesSettingTab extends obsidian_1.PluginSettingTab {
                 .onChange(async (value) => {
                 this.plugin.settings.includeOrphanedInFullExport = value;
                 await this.plugin.saveSettings();
-                this.display();
+                this.update();
             });
         });
         let noteFontDropdown = null;
@@ -5089,15 +5082,21 @@ function sanitizeVaultPath(path) {
     var _a;
     return (_a = sanitizeOptionalVaultPath(path)) !== null && _a !== void 0 ? _a : "Imported side notes.md";
 }
-function sanitizeOptionalVaultPath(path) {
-    var _a, _b;
+function sanitizeOptionalVaultPath(path, protectedConfigDir) {
+    var _a;
     const normalizedPath = path.replace(/\\/g, "/");
     if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath))
         return null;
     const parts = normalizedPath.split("/").filter((part) => part.length > 0);
     if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
-        ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === ".obsidian" || ((_b = parts[0]) === null || _b === void 0 ? void 0 : _b.toLowerCase()) === ".git")
+        ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === ".git")
         return null;
+    if (protectedConfigDir) {
+        const configPath = protectedConfigDir.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").toLowerCase();
+        const candidate = parts.join("/").toLowerCase();
+        if (configPath && (candidate === configPath || candidate.startsWith(`${configPath}/`)))
+            return null;
+    }
     const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
     return sanitizedParts.join("/") || null;
 }
