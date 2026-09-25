@@ -127,3 +127,9 @@ For BRAT, use `aagprojectsteam-max/aag-obsidian-sidenotes`. Remove the old repos
 Notes, IDs and attachments are stored in your vault. Commands can write Markdown frontmatter/anchors, import files and access the clipboard or user-selected media; linked images or external links may use their destinations when displayed/opened. No telemetry, accounts or paid service is required. Local font/audio/clipboard features depend on host permissions. No automatic updater is included.
 
 Run `npm ci --ignore-scripts`, then `npm run verify`. Build output stays under `dist/build`; release packaging allowlists three runtime assets and never includes local settings. TypeScript and host Obsidian/CodeMirror packages are development/external dependencies, not copied implementations in the plugin bundle.
+
+## 0.2.2 hardening
+
+Version 0.2.2 keeps the historical public plugin ID and adds stricter store failure handling, verified queued saves, duplicate-identity protection, safer orphan export behavior, serialized imports, media/export failure reporting, recording lifecycle guards, URL policy centralization, and transaction-preserving block-ID protection.
+
+Before release, the exact three-file 0.2.2 candidate must pass a real Obsidian load and UI acceptance test; the user's current GOLDEN installation is intentionally not replaced by this preview branch.

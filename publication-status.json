@@ -1,11 +1,12 @@
 {
-  "publication": "PUBLICATION_AUTHORIZED_0.2.1",
+  "publication": "PREVIEW_0.2.2_NOT_YET_AUTHORIZED",
   "license": "PUBLIC_UPSTREAM_MIT_PRESERVED",
   "identity": "context-aware-paragraph-notes",
   "production_deployment": "NOT_PERFORMED",
   "acceptance_limits": [
     "Real Obsidian migration and mobile GUI not exercised",
-    "Multi-file import uses fail-closed recovery journal, not global filesystem atomicity"
+    "Multi-file import uses fail-closed recovery journal, not global filesystem atomicity",
+    "Exact 0.2.2 three-file candidate still requires real Obsidian load and UI acceptance before release"
   ],
   "repository": "https://github.com/aagprojectsteam-max/aag-obsidian-sidenotes"
 }

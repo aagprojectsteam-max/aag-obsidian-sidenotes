@@ -1,7 +1,7 @@
 {
   "id": "context-aware-paragraph-notes",
   "name": "SideNotes",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "minAppVersion": "1.13.7",
   "description": "Write and view sidebar notes linked to the paragraph under your cursor.",
   "author": "AAG - Projects Team",
