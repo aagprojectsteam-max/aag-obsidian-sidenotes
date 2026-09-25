@@ -18,7 +18,7 @@ import {
   TFile,
   WorkspaceLeaf
 } from "obsidian";
-import { EditorState, RangeSetBuilder, Text } from "@codemirror/state";
+import { ChangeSet, EditorState, RangeSetBuilder, StateEffect, Text, Transaction } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 
 const VIEW_TYPE_SIDE_NOTES = "context-aware-paragraph-notes-view";
@@ -360,12 +360,6 @@ export default class SideNotesPlugin extends Plugin {
     this.addCommand({
       id: "toggle-new-note-composer",
       name: "Toggle new note",
-      hotkeys: [
-        {
-          modifiers: ["Shift"],
-          key: "PageUp"
-        }
-      ],
       callback: () => {
         void this.toggleNewNoteComposer();
       }
@@ -1014,32 +1008,38 @@ export default class SideNotesPlugin extends Plugin {
       return;
     }
 
-    const transferFiles: SideNotesTransferFile[] = [];
-    for (const file of files) {
-      const sideNoteId = this.getSideNoteIDFromProperties(file);
-      if (!sideNoteId) {
-        continue;
+    try {
+      const transferFiles: SideNotesTransferFile[] = [];
+      for (const file of files) {
+        const storedFile = this.getStoredFileNotes(file);
+        if (!storedFile) {
+          continue;
+        }
+
+        transferFiles.push(
+          await this.createTransferFileForAttachedFile(file, storedFile.SideNoteID, storedFile.blocks)
+        );
       }
 
-      const storedFile = this.getStoredFileNotes(file);
-      transferFiles.push(await this.createTransferFileForAttachedFile(file, sideNoteId, storedFile?.blocks ?? {}));
+      if (transferFiles.length === 0) {
+        new Notice("No files with attached SideNotes selected.");
+        return;
+      }
+
+      const bundle: SideNotesTransferBundle = {
+        type: SIDE_NOTES_BUNDLE_TYPE,
+        version: SIDE_NOTES_BUNDLE_VERSION,
+        exportedAt: Date.now(),
+        files: transferFiles
+      };
+
+      const bundleText = JSON.stringify(bundle, null, 2);
+      const suggestedName = this.getSideNotesBundleFileName(files);
+      await this.saveSideNotesBundleWithPicker(bundleText, suggestedName, files);
+    } catch (error) {
+      console.error("SideNotes export failed", error);
+      new Notice("SideNotes export was cancelled because all requested data could not be read.");
     }
-
-    if (transferFiles.length === 0) {
-      new Notice("No files with SideNotesID selected.");
-      return;
-    }
-
-    const bundle: SideNotesTransferBundle = {
-      type: SIDE_NOTES_BUNDLE_TYPE,
-      version: SIDE_NOTES_BUNDLE_VERSION,
-      exportedAt: Date.now(),
-      files: transferFiles
-    };
-
-    const bundleText = JSON.stringify(bundle, null, 2);
-    const suggestedName = this.getSideNotesBundleFileName(files);
-    await this.saveSideNotesBundleWithPicker(bundleText, suggestedName, files);
   }
 
   async exportAllSideNotesBundle(includeOrphaned: boolean) {
@@ -1051,48 +1051,62 @@ export default class SideNotesPlugin extends Plugin {
       return;
     }
 
-    const attachedFiles: TFile[] = [];
-    const transferFiles: SideNotesTransferFile[] = [];
+    try {
+      const attachedFiles: TFile[] = [];
+      const transferFiles: SideNotesTransferFile[] = [];
 
-    for (const storedFileSummary of storedFiles) {
-      const sideNoteId = normalizeSideNotesId(storedFileSummary.SideNoteID);
-      const storedFile = this.sideNotesData.filesBySideNoteId[sideNoteId];
-      if (!storedFile || !Object.values(storedFile.blocks).some((block) => block.notes.length > 0)) {
-        continue;
-      }
+      for (const storedFileSummary of storedFiles) {
+        const sideNoteId = normalizeSideNotesId(storedFileSummary.SideNoteID);
+        const storedFile = this.sideNotesData.filesBySideNoteId[sideNoteId];
+        if (!storedFile || !Object.values(storedFile.blocks).some((block) => block.notes.length > 0)) {
+          continue;
+        }
 
-      const file = this.app.vault.getAbstractFileByPath(storedFile.path);
-      if (file instanceof TFile) {
+        if (storedFileSummary.orphaned) {
+          if (includeOrphaned) {
+            transferFiles.push(await this.createTransferFileForOrphanedFile(storedFile));
+          }
+          continue;
+        }
+
+        const file = this.app.vault.getAbstractFileByPath(storedFile.path);
+        if (!(file instanceof TFile)) {
+          if (includeOrphaned) {
+            transferFiles.push(await this.createTransferFileForOrphanedFile(storedFile));
+          }
+          continue;
+        }
+
         attachedFiles.push(file);
         transferFiles.push(await this.createTransferFileForAttachedFile(file, sideNoteId, storedFile.blocks));
-        continue;
       }
 
-      if (includeOrphaned) {
-        transferFiles.push(await this.createTransferFileForOrphanedFile(storedFile));
+      if (transferFiles.length === 0) {
+        new Notice(includeOrphaned ? "No side notes to export." : "No attached files with side notes to export.");
+        return;
       }
+
+      const bundle: SideNotesTransferBundle = {
+        type: SIDE_NOTES_BUNDLE_TYPE,
+        version: SIDE_NOTES_BUNDLE_VERSION,
+        exportedAt: Date.now(),
+        files: transferFiles
+      };
+
+      const bundleText = JSON.stringify(bundle, null, 2);
+      const suggestedName =
+        "SideNotes all" + (includeOrphaned ? " with orphaned" : "") + " " + getSafeTimestamp() + ".sidenotes";
+      await this.saveSideNotesBundleWithPicker(bundleText, suggestedName, attachedFiles);
+    } catch (error) {
+      console.error("SideNotes full export failed", error);
+      new Notice("SideNotes export was cancelled because all requested data could not be read.");
     }
-
-    if (transferFiles.length === 0) {
-      new Notice(includeOrphaned ? "No side notes to export." : "No attached files with side notes to export.");
-      return;
-    }
-
-    const bundle: SideNotesTransferBundle = {
-      type: SIDE_NOTES_BUNDLE_TYPE,
-      version: SIDE_NOTES_BUNDLE_VERSION,
-      exportedAt: Date.now(),
-      files: transferFiles
-    };
-
-    const bundleText = JSON.stringify(bundle, null, 2);
-    const suggestedName = `SideNotes all${includeOrphaned ? " with orphaned" : ""} ${getSafeTimestamp()}.sidenotes`;
-    await this.saveSideNotesBundleWithPicker(bundleText, suggestedName, attachedFiles);
   }
 
   async createTransferFileForAttachedFile(file: TFile, sideNoteId: string, blocks: Record<string, BlockNotes>): Promise<SideNotesTransferFile> {
     sideNoteId = normalizeSideNotesId(sideNoteId);
-    await this.ensureSideNoteIDProperty(file, sideNoteId, true);
+    // Export is deliberately read-only. Identity repair belongs to an explicit
+    // attach/repair operation, never to a backup/export command.
     const content = await this.app.vault.read(file);
     const attachments = await this.getTransferAttachmentsForFile(file, content, blocks);
     return {
@@ -1150,7 +1164,8 @@ export default class SideNotesPlugin extends Plugin {
           data: arrayBufferToBase64(data)
         });
       } catch (error) {
-        console.error(error);
+        console.error("Could not read SideNotes export attachment", attachmentFile.path, error);
+        throw new Error("Could not read attachment: " + attachmentFile.path);
       }
     }
 
@@ -1311,64 +1326,105 @@ export default class SideNotesPlugin extends Plugin {
 
   async importSideNotesBundleText(rawBundle: string): Promise<SideNotesImportResult> {
     this.assertStoreOwnership();
-    if (this.importInProgress) throw new Error("A SideNotes import is already running.");
-    const bundle = parseSideNotesTransferBundle(rawBundle);
-    // Complete path/attachment preflight before the first filesystem mutation.
-    const attachmentBytes = new Map<string, string>();
-    for (const file of bundle.files) {
-      for (const value of [file.path, ...file.attachments.map(attachment => attachment.path)]) {
-        const safe = sanitizeOptionalVaultPath(value);
-        if (!safe || safe.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() ||
-            safe === SIDE_NOTES_DATA_PATH || safe === IMPORT_JOURNAL) throw new Error("Unsafe import path.");
-      }
-      for (const attachment of file.attachments) {
-        base64ToArrayBuffer(attachment.data);
-        if (attachmentBytes.has(attachment.path) && attachmentBytes.get(attachment.path) !== attachment.data) throw new Error("Conflicting attachment bytes.");
-        attachmentBytes.set(attachment.path, attachment.data);
-      }
+    if (this.importInProgress) {
+      throw new Error("A SideNotes import is already running.");
     }
-    if (await this.app.vault.adapter.exists(IMPORT_JOURNAL)) throw new Error("Recover the previous interrupted import first.");
+
+    // Reserve the in-process writer synchronously, before parsing or awaiting
+    // filesystem state. The durable journal is the separate crash/restart guard.
     this.importInProgress = true;
-    const before = JSON.stringify(this.sideNotesData);
     const created: TFile[] = [];
     this.importCreated = created;
-    let committed = false;
+
     try {
-      await this.ensureVaultFolder(SIDE_NOTES_FOLDER);
-      // Durable pre-import state and complete validated payload survive process interruption.
-      const journal = JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), bundle });
-      await this.writeImportJournal(journal);
-      if (await this.app.vault.adapter.read(IMPORT_JOURNAL) !== journal) throw new Error("Import journal verification failed.");
-      await this.storeSaveQueue;
-      let noteCount = 0, attachmentCount = 0;
-      const importedAttachmentPaths = new Map<string, string>();
-      for (const transferFile of bundle.files) {
-        const result = await this.importSideNotesTransferFile(transferFile, importedAttachmentPaths);
-        noteCount += result.noteCount;
-        attachmentCount += result.attachmentCount;
-        await this.writeImportJournal(JSON.stringify({ version: 1, state: "pending", before: JSON.parse(before), completed: this.sideNotesData, createdPaths: created.map(file => file.path), bundle }));
-      }
-      await this.saveSideNotesData(true);
-      committed = true;
-      await this.app.vault.adapter.remove(IMPORT_JOURNAL);
-      this.refreshViews();
-      return { fileCount: bundle.files.length, noteCount, attachmentCount };
-    } catch (error) {
-      if (!committed) {
-        const previous = JSON.parse(before) as SideNotesData;
-        // Imports only add fresh paths/IDs. Roll back their in-memory mappings while
-        // retaining unrelated changes made by other UI actions during the await points.
-        const paths = new Set(created.map(file => file.path));
-        for (const filePath of paths) {
-          const id = this.sideNotesData.sideNoteIds[filePath];
-          if (!previous.sideNoteIds[filePath]) delete this.sideNotesData.sideNoteIds[filePath];
-          if (id && !previous.filesBySideNoteId[id] && this.sideNotesData.filesBySideNoteId[id]?.path === filePath) delete this.sideNotesData.filesBySideNoteId[id];
+      const bundle = parseSideNotesTransferBundle(rawBundle);
+
+      // Complete path and attachment preflight before the first filesystem mutation.
+      const attachmentBytes = new Map<string, string>();
+      for (const file of bundle.files) {
+        for (const value of [file.path, ...file.attachments.map((attachment) => attachment.path)]) {
+          const safe = sanitizeOptionalVaultPath(value, this.app.vault.configDir);
+          if (!safe ||
+              safe === SIDE_NOTES_DATA_PATH ||
+              safe === IMPORT_JOURNAL) {
+            throw new Error("Unsafe import path.");
+          }
         }
-        // Keep created Markdown/media and the durable journal on failure: host events,
-        // sync or the user may already have edited them. Never delete potentially valid notes.
-        // No partial import is reported as successful. Recovery is explicit and fail-closed.
+
+        for (const attachment of file.attachments) {
+          base64ToArrayBuffer(attachment.data);
+          if (attachmentBytes.has(attachment.path) &&
+              attachmentBytes.get(attachment.path) !== attachment.data) {
+            throw new Error("Conflicting attachment bytes.");
+          }
+          attachmentBytes.set(attachment.path, attachment.data);
+        }
       }
-      throw error;
+
+      if (await this.app.vault.adapter.exists(IMPORT_JOURNAL)) {
+        throw new Error("Recover the previous interrupted import first.");
+      }
+
+      const before = JSON.stringify(this.sideNotesData);
+      let committed = false;
+
+      try {
+        await this.ensureVaultFolder(SIDE_NOTES_FOLDER);
+        const journal = JSON.stringify({
+          version: 1,
+          state: "pending",
+          before: JSON.parse(before),
+          bundle
+        });
+        await this.writeImportJournal(journal);
+        if (await this.app.vault.adapter.read(IMPORT_JOURNAL) !== journal) {
+          throw new Error("Import journal verification failed.");
+        }
+
+        await this.storeSaveQueue;
+        let noteCount = 0;
+        let attachmentCount = 0;
+        const importedAttachmentPaths = new Map<string, string>();
+
+        for (const transferFile of bundle.files) {
+          const result = await this.importSideNotesTransferFile(transferFile, importedAttachmentPaths);
+          noteCount += result.noteCount;
+          attachmentCount += result.attachmentCount;
+          await this.writeImportJournal(JSON.stringify({
+            version: 1,
+            state: "pending",
+            before: JSON.parse(before),
+            completed: this.sideNotesData,
+            createdPaths: created.map((file) => file.path),
+            bundle
+          }));
+        }
+
+        await this.saveSideNotesData(true);
+        committed = true;
+        await this.app.vault.adapter.remove(IMPORT_JOURNAL);
+        this.refreshViews();
+        return { fileCount: bundle.files.length, noteCount, attachmentCount };
+      } catch (error) {
+        if (!committed) {
+          const previous = JSON.parse(before) as SideNotesData;
+          const paths = new Set(created.map((file) => file.path));
+          for (const filePath of paths) {
+            const id = this.sideNotesData.sideNoteIds[filePath];
+            if (!previous.sideNoteIds[filePath]) {
+              delete this.sideNotesData.sideNoteIds[filePath];
+            }
+            if (id &&
+                !previous.filesBySideNoteId[id] &&
+                this.sideNotesData.filesBySideNoteId[id]?.path === filePath) {
+              delete this.sideNotesData.filesBySideNoteId[id];
+            }
+          }
+          // Created files and the recovery journal stay in place intentionally:
+          // host events, sync, or the user may already have touched them.
+        }
+        throw error;
+      }
     } finally {
       this.importCreated = null;
       this.importInProgress = false;
@@ -1680,8 +1736,14 @@ export default class SideNotesPlugin extends Plugin {
       return;
     }
 
+    const safeUrl = normalizeSideNoteUrl(note.url);
+    if (!safeUrl) {
+      new Notice("This URL uses an unsupported or unsafe protocol.");
+      return;
+    }
+
     try {
-      await openUrlExternally(note.url);
+      await openUrlExternally(safeUrl);
     } catch (error) {
       console.error(error);
       new Notice("Could not open this URL.");
@@ -2559,37 +2621,100 @@ export default class SideNotesPlugin extends Plugin {
       return null;
     }
 
+    const chooseUniqueBest = (entries: Array<[string, BlockNotes]>): string | null => {
+      if (entries.length === 0) {
+        return null;
+      }
+
+      const exact = entries.filter(([, blockNotes]) =>
+        blockNotes.fromLine === range.fromLine && blockNotes.toLine === range.toLine
+      );
+      if (exact.length === 1) {
+        return exact[0][0];
+      }
+      if (exact.length > 1) {
+        return null;
+      }
+
+      const scored = entries
+        .map(([blockId, blockNotes]) => ({ blockId, score: getLineRangeMatchScore(blockNotes, range) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score || a.blockId.localeCompare(b.blockId));
+
+      if (scored.length === 0 ||
+          (scored.length > 1 && scored[0].score === scored[1].score)) {
+        return null;
+      }
+
+      return scored[0].blockId;
+    };
+
     if (fingerprint) {
-      for (const [blockId, blockNotes] of Object.entries(storedFile.blocks)) {
-        if (blockNotes.fingerprint === fingerprint) {
-          return blockId;
-        }
+      const fingerprintMatches = Object.entries(storedFile.blocks)
+        .filter(([, blockNotes]) => blockNotes.fingerprint === fingerprint);
+
+      if (fingerprintMatches.length === 1) {
+        return fingerprintMatches[0][0];
+      }
+      if (fingerprintMatches.length > 1) {
+        return chooseUniqueBest(fingerprintMatches);
       }
     }
 
-    for (const [blockId, blockNotes] of Object.entries(storedFile.blocks)) {
-      if (blockNotes.fromLine === range.fromLine && blockNotes.toLine === range.toLine) {
-        return blockId;
-      }
+    return chooseUniqueBest(Object.entries(storedFile.blocks));
+  }
+
+  private isSideNoteIdOwnedByDifferentExistingFile(file: TFile, sideNoteId: string): boolean {
+    const normalizedId = normalizeSideNotesId(sideNoteId);
+    const storedFile = this.sideNotesData.filesBySideNoteId[normalizedId];
+    if (!storedFile || storedFile.path === file.path) {
+      return false;
     }
 
-    let bestLineMatch: { blockId: string; score: number } | null = null;
-    for (const [blockId, blockNotes] of Object.entries(storedFile.blocks)) {
-      const score = getLineRangeMatchScore(blockNotes, range);
-      if (score === 0) {
-        continue;
-      }
-
-      if (!bestLineMatch || score > bestLineMatch.score) {
-        bestLineMatch = { blockId, score };
-      }
+    const owner = this.app.vault.getAbstractFileByPath(storedFile.path);
+    if (!(owner instanceof TFile)) {
+      // The old path disappeared: this can be a rename/move. Let the normal
+      // rename/path recovery flow retain the existing identity.
+      return false;
     }
 
-    return bestLineMatch?.blockId ?? null;
+    const ownerPropertyId = this.getSideNoteIDFromProperties(owner);
+    return ownerPropertyId === normalizedId ||
+      normalizeSideNotesId(this.sideNotesData.sideNoteIds[storedFile.path] ?? "") === normalizedId;
+  }
+
+  private makeFreshStoredFileNotes(file: TFile): StoredFileNotes {
+    const sideNoteId = this.makeUnusedSideNotesID();
+    const storedFile: StoredFileNotes = {
+      SideNoteID: sideNoteId,
+      path: file.path,
+      name: file.basename,
+      blocks: {}
+    };
+
+    this.sideNotesData.sideNoteIds[file.path] = sideNoteId;
+    this.sideNotesData.filesBySideNoteId[sideNoteId] = storedFile;
+    void this.ensureSideNoteIDProperty(file, sideNoteId, true);
+    return storedFile;
   }
 
   ensureStoredFileNotes(file: TFile): StoredFileNotes {
     const propertySideNoteId = this.getSideNoteIDFromProperties(file);
+
+    if (propertySideNoteId && this.isSideNoteIdOwnedByDifferentExistingFile(file, propertySideNoteId)) {
+      const pathMappedId = this.sideNotesData.sideNoteIds[file.path];
+      if (pathMappedId && this.sideNotesData.filesBySideNoteId[pathMappedId]) {
+        return this.sideNotesData.filesBySideNoteId[pathMappedId];
+      }
+
+      const storedFile = this.makeFreshStoredFileNotes(file);
+      new Notice(
+        "This copied file had a SideNotesID already used by another file. " +
+        "A new identity was assigned; existing SideNotes were not copied."
+      );
+      return storedFile;
+    }
+
     if (propertySideNoteId && this.sideNotesData.filesBySideNoteId[propertySideNoteId]) {
       const storedFile = this.sideNotesData.filesBySideNoteId[propertySideNoteId];
       storedFile.SideNoteID = propertySideNoteId;
@@ -2608,23 +2733,14 @@ export default class SideNotesPlugin extends Plugin {
       return existing;
     }
 
-    const sideNoteId = propertySideNoteId ?? makeSideNotesId();
-    const storedFile: StoredFileNotes = {
-      SideNoteID: sideNoteId,
-      path: file.path,
-      name: file.basename,
-      blocks: {}
-    };
-
-    this.sideNotesData.sideNoteIds[file.path] = sideNoteId;
-    this.sideNotesData.filesBySideNoteId[sideNoteId] = storedFile;
-    void this.ensureSideNoteIDProperty(file, sideNoteId);
-    return storedFile;
+    return this.makeFreshStoredFileNotes(file);
   }
 
   getStoredFileNotes(file: TFile): StoredFileNotes | null {
     const propertySideNoteId = this.getSideNoteIDFromProperties(file);
-    if (propertySideNoteId && this.sideNotesData.filesBySideNoteId[propertySideNoteId]) {
+    if (propertySideNoteId &&
+        !this.isSideNoteIdOwnedByDifferentExistingFile(file, propertySideNoteId) &&
+        this.sideNotesData.filesBySideNoteId[propertySideNoteId]) {
       const storedFile = this.sideNotesData.filesBySideNoteId[propertySideNoteId];
       storedFile.SideNoteID = propertySideNoteId;
       this.sideNotesData.sideNoteIds[file.path] = propertySideNoteId;
@@ -2689,11 +2805,12 @@ export default class SideNotesPlugin extends Plugin {
       return false;
     }
 
-    if (this.sideNotesData.sideNoteIds[storedFile.path] === storedFile.SideNoteID) {
-      return true;
+    const propertySideNoteId = this.getSideNoteIDFromProperties(file);
+    if (propertySideNoteId) {
+      return propertySideNoteId === storedFile.SideNoteID;
     }
 
-    return this.getSideNoteIDFromProperties(file) === storedFile.SideNoteID;
+    return this.sideNotesData.sideNoteIds[storedFile.path] === storedFile.SideNoteID;
   }
 
   async handleDelete(file: TAbstractFile) {
@@ -2756,6 +2873,8 @@ class SideNotesView extends ItemView {
   private draftSelectionEnd = 0;
   private draftSelectionStart = 0;
   private draftUndoStack: DraftUndoState[] = [];
+  private draftRevision = 0;
+  private draftSaveInProgress = false;
   private editDrafts = new Map<string, string>();
   private editNoteToFocus: string | null = null;
   private orphanedNoteIds: string[] = [];
@@ -2784,6 +2903,8 @@ class SideNotesView extends ItemView {
   private audioRecordingStopButton: ButtonComponent | null = null;
   private audioRecordingStream: MediaStream | null = null;
   private audioRecordingTimerId: number | null = null;
+  private audioRecordingRequestGeneration = 0;
+  private audioRecordingRequesting = false;
 
   constructor(leaf: WorkspaceLeaf, plugin: SideNotesPlugin) {
     super(leaf);
@@ -3832,14 +3953,28 @@ class SideNotesView extends ItemView {
   }
 
   private async addDraftNote() {
-    const noteAdded = await this.plugin.addNoteForCurrentContext(this.draft, false);
-    if (noteAdded) {
-      this.draft = "";
-      this.clearDraftUndoHistory();
+    if (this.draftSaveInProgress) {
+      return;
     }
 
-    this.shouldFocusComposer = true;
-    void this.render();
+    const submittedDraft = this.draft;
+    const submittedRevision = this.draftRevision;
+    this.draftSaveInProgress = true;
+
+    try {
+      const noteAdded = await this.plugin.addNoteForCurrentContext(submittedDraft, false);
+      if (noteAdded &&
+          this.draftRevision === submittedRevision &&
+          this.draft === submittedDraft) {
+        this.draft = "";
+        this.draftRevision++;
+        this.clearDraftUndoHistory();
+      }
+    } finally {
+      this.draftSaveInProgress = false;
+      this.shouldFocusComposer = true;
+      void this.render({ preserveScroll: true });
+    }
   }
 
   private chooseImageNoteFile() {
@@ -4060,7 +4195,8 @@ class SideNotesView extends ItemView {
   }
 
   private async startAudioRecording() {
-    if (this.audioRecordingMediaRecorder && this.audioRecordingMediaRecorder.state !== "inactive") {
+    if (this.audioRecordingRequesting ||
+        (this.audioRecordingMediaRecorder && this.audioRecordingMediaRecorder.state !== "inactive")) {
       return;
     }
 
@@ -4069,7 +4205,6 @@ class SideNotesView extends ItemView {
       if (!context?.blockId) {
         return;
       }
-
       this.audioRecordingContext = context;
     }
 
@@ -4078,11 +4213,29 @@ class SideNotesView extends ItemView {
       return;
     }
 
+    const requestGeneration = ++this.audioRecordingRequestGeneration;
+    this.audioRecordingRequesting = true;
+    this.updateAudioRecordingUi();
+
     try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const requestIsCurrent =
+        requestGeneration === this.audioRecordingRequestGeneration &&
+        this.audioRecordingPanelVisible &&
+        this.contentEl.isConnected;
+
+      if (!requestIsCurrent) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       this.stopAudioRecordingStream();
-      this.audioRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.audioRecordingStream = stream;
       const mimeType = getPreferredAudioRecordingMimeType();
-      this.audioRecordingMediaRecorder = new MediaRecorder(this.audioRecordingStream, mimeType ? { mimeType } : undefined);
+      this.audioRecordingMediaRecorder = new MediaRecorder(
+        this.audioRecordingStream,
+        mimeType ? { mimeType } : undefined
+      );
       this.audioRecordingChunks = [];
       this.audioRecordingMediaRecorder.addEventListener("dataavailable", (event) => {
         if (event.data.size > 0) {
@@ -4102,13 +4255,19 @@ class SideNotesView extends ItemView {
       this.audioRecordingStartedAt = Date.now();
       this.audioRecordingMediaRecorder.start();
       this.startAudioRecordingTimer();
-      this.updateAudioRecordingUi();
       this.plugin.focusLastMarkdownEditor();
     } catch (error) {
+      if (requestGeneration !== this.audioRecordingRequestGeneration) {
+        return;
+      }
       console.error(error);
       new Notice("Could not start audio recording.");
       this.stopAudioRecordingStream();
-      this.updateAudioRecordingUi();
+    } finally {
+      if (requestGeneration === this.audioRecordingRequestGeneration) {
+        this.audioRecordingRequesting = false;
+        this.updateAudioRecordingUi();
+      }
     }
   }
 
@@ -4124,6 +4283,8 @@ class SideNotesView extends ItemView {
   }
 
   private cancelAudioRecording(silent = false) {
+    this.audioRecordingRequestGeneration++;
+    this.audioRecordingRequesting = false;
     this.audioRecordingShouldSaveOnStop = false;
     if (this.audioRecordingMediaRecorder && this.audioRecordingMediaRecorder.state !== "inactive") {
       this.audioRecordingMediaRecorder.stop();
@@ -4167,6 +4328,8 @@ class SideNotesView extends ItemView {
   private resetAudioRecordingState() {
     this.stopAudioRecordingTimer();
     this.stopAudioRecordingStream();
+    this.audioRecordingRequestGeneration++;
+    this.audioRecordingRequesting = false;
     this.audioRecordingPanelVisible = false;
     this.audioRecordingChunks = [];
     this.audioRecordingContext = null;
@@ -4207,8 +4370,12 @@ class SideNotesView extends ItemView {
     const isRecording = this.isAudioRecordingActive();
     this.audioRecordingStatusEl?.setText(this.getAudioRecordingStatusText());
     this.audioRecordingElapsedEl?.setText(this.getAudioRecordingElapsedText());
-    this.audioRecordingStartButton?.setDisabled(isRecording || this.audioRecordingSaving);
-    this.audioRecordingStopButton?.setDisabled(!isRecording || this.audioRecordingSaving);
+    this.audioRecordingStartButton?.setDisabled(
+      isRecording || this.audioRecordingSaving || this.audioRecordingRequesting
+    );
+    this.audioRecordingStopButton?.setDisabled(
+      !isRecording || this.audioRecordingSaving || this.audioRecordingRequesting
+    );
     this.audioRecordingCancelButton?.setDisabled(this.audioRecordingSaving);
   }
 
@@ -4224,6 +4391,10 @@ class SideNotesView extends ItemView {
   private getAudioRecordingStatusText(): string {
     if (this.audioRecordingSaving) {
       return "Saving recording...";
+    }
+
+    if (this.audioRecordingRequesting) {
+      return "Waiting for microphone permission...";
     }
 
     if (this.isAudioRecordingActive()) {
@@ -4255,6 +4426,7 @@ class SideNotesView extends ItemView {
 
     this.draft = currentValue;
     this.draftLastValue = currentValue;
+    this.draftRevision++;
     this.captureDraftSelection(textarea);
   }
 
@@ -5344,7 +5516,7 @@ class SideNotesSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("AAG - Side Notes settings")
+      .setName("AAG - Side Notes")
       .setHeading();
 
     new Setting(containerEl)
@@ -5510,7 +5682,7 @@ class SideNotesSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.includeOrphanedInFullExport = value;
             await this.plugin.saveSettings();
-            this.display();
+            this.update();
           });
       });
 
@@ -6023,12 +6195,19 @@ function sanitizeVaultPath(path: string): string {
   return sanitizeOptionalVaultPath(path) ?? "Imported side notes.md";
 }
 
-function sanitizeOptionalVaultPath(path: string): string | null {
+function sanitizeOptionalVaultPath(path: string, protectedConfigDir?: string): string | null {
   const normalizedPath = path.replace(/\\/g, "/");
   if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath)) return null;
   const parts = normalizedPath.split("/").filter((part) => part.length > 0);
   if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
-      parts[0]?.toLowerCase() === ".obsidian" || parts[0]?.toLowerCase() === ".git") return null;
+      parts[0]?.toLowerCase() === ".git") return null;
+
+  if (protectedConfigDir) {
+    const configPath = protectedConfigDir.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").toLowerCase();
+    const candidate = parts.join("/").toLowerCase();
+    if (configPath && (candidate === configPath || candidate.startsWith(`${configPath}/`))) return null;
+  }
+
   const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
   return sanitizedParts.join("/") || null;
 }
@@ -6605,17 +6784,32 @@ function getFileNoteDisplayPath(note: SideNote): string {
   return "";
 }
 
+const SIDE_NOTES_ALLOWED_URL_PROTOCOLS = new Set([
+  "http:",
+  "https:",
+  "mailto:",
+  "anki:",
+  "obsidian:"
+]);
+
 function normalizeSideNoteUrl(rawUrl: string): string | null {
   const trimmedUrl = rawUrl.trim();
-  if (!trimmedUrl || /^(?:javascript|data):/i.test(trimmedUrl)) {
+  if (!trimmedUrl) {
     return null;
   }
 
-  if (looksLikeSideNoteUrl(trimmedUrl)) {
-    return trimmedUrl;
-  }
+  const candidate = looksLikeSideNoteUrl(trimmedUrl)
+    ? trimmedUrl
+    : "https://" + trimmedUrl;
 
-  return `https://${trimmedUrl}`;
+  try {
+    const parsed = new URL(candidate);
+    return SIDE_NOTES_ALLOWED_URL_PROTOCOLS.has(parsed.protocol.toLowerCase())
+      ? candidate
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function looksLikeSideNoteUrl(value: string): boolean {
@@ -6649,12 +6843,15 @@ function getUrlDisplayName(url: string): string {
 }
 
 async function openUrlExternally(url: string): Promise<void> {
-  const openedWindow = window.open(url, "_blank");
-  if (openedWindow) {
-    return;
+  const safeUrl = normalizeSideNoteUrl(url);
+  if (!safeUrl) {
+    throw new Error("Unsafe URL protocol.");
   }
 
-  window.location.href = url;
+  const openedWindow = window.open(safeUrl, "_blank", "noopener,noreferrer");
+  if (!openedWindow) {
+    throw new Error("External URL window was blocked.");
+  }
 }
 
 async function openFilePathExternally(path: string, fallbackUrl?: string): Promise<void> {
@@ -7447,24 +7644,32 @@ function createBlockIdHiderExtension(prefix: string, protectBlockIds: boolean) {
       return transaction;
     }
 
-    const redirectedChanges: Array<{ from: number; to: number; insert: Text | string }> = [];
-    let redirectedSelectionAnchor: number | null = null;
+    const rewrittenChanges: Array<{ from: number; to: number; insert: Text | string }> = [];
     const hasSelection = transaction.startState.selection.ranges.some((range) => !range.empty);
+    let rewritten = false;
     let blockChange = false;
 
     transaction.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
       if (inserted.length === 0 && fromA < toA) {
-        const touchedRanges = protectedRanges.filter((range) => changeTouchesProtectedRange(fromA, toA, range));
+        const touchedRanges = protectedRanges.filter((range) =>
+          changeTouchesProtectedRange(fromA, toA, range)
+        );
+
         if (touchedRanges.length > 0) {
-          if (hasSelection && touchedRanges.every((range) => fromA <= range.from && toA >= range.to)) {
+          if (hasSelection &&
+              touchedRanges.every((range) => fromA <= range.from && toA >= range.to)) {
+            // An explicit selection that fully includes the protected token may
+            // intentionally remove it. Preserve the entire original change.
+            rewrittenChanges.push({ from: fromA, to: toA, insert: inserted });
             return;
           }
 
+          rewritten = true;
           for (const deletionRange of getUnprotectedDeletionRanges(fromA, toA, protectedRanges)) {
-            redirectedChanges.push({
+            rewrittenChanges.push({
               from: deletionRange.from,
               to: deletionRange.to,
-              insert: inserted
+              insert: ""
             });
           }
           return;
@@ -7479,8 +7684,8 @@ function createBlockIdHiderExtension(prefix: string, protectBlockIds: boolean) {
         protectedRanges
       );
       if (standaloneRangeMove) {
-        redirectedChanges.push(...standaloneRangeMove.changes);
-        redirectedSelectionAnchor = standaloneRangeMove.selectionAnchor;
+        rewritten = true;
+        rewrittenChanges.push(...standaloneRangeMove.changes);
         return;
       }
 
@@ -7489,8 +7694,9 @@ function createBlockIdHiderExtension(prefix: string, protectBlockIds: boolean) {
       );
 
       if (redirectedRange) {
+        rewritten = true;
         const insertAt = getProtectedRangeInsertPosition(inserted, redirectedRange);
-        redirectedChanges.push({
+        rewrittenChanges.push({
           from: insertAt,
           to: insertAt,
           insert: inserted
@@ -7500,23 +7706,48 @@ function createBlockIdHiderExtension(prefix: string, protectBlockIds: boolean) {
 
       if (changeTouchesProtectedRanges(fromA, toA, protectedRanges)) {
         blockChange = true;
+        return;
       }
+
+      // Keep ordinary changes from the same transaction. This is essential for
+      // multi-cursor edits and transactions emitted by other editor extensions.
+      rewrittenChanges.push({ from: fromA, to: toA, insert: inserted });
     });
 
     if (blockChange) {
       return [];
     }
 
-    if (redirectedChanges.length > 0) {
-      const lastChange = redirectedChanges[redirectedChanges.length - 1];
-      return {
-        changes: redirectedChanges,
-        selection: { anchor: redirectedSelectionAnchor ?? lastChange.from + lastChange.insert.length },
-        scrollIntoView: transaction.scrollIntoView
-      };
+    if (!rewritten) {
+      return transaction;
     }
 
-    return transaction;
+    const rewrittenChangeSet = ChangeSet.of(
+      rewrittenChanges,
+      transaction.startState.doc.length
+    );
+
+    // Map the original resulting selection/effects from the original final
+    // document into the rewritten final document. This preserves unrelated
+    // editor/plugin state while changing only the protected ranges.
+    const originalToRewritten = transaction.changes.invertedDesc.composeDesc(rewrittenChangeSet);
+    const userEvent = transaction.annotation(Transaction.userEvent);
+    const addToHistory = transaction.annotation(Transaction.addToHistory);
+    const remote = transaction.annotation(Transaction.remote);
+    const time = transaction.annotation(Transaction.time);
+
+    return {
+      changes: rewrittenChangeSet,
+      selection: transaction.newSelection.map(originalToRewritten),
+      effects: StateEffect.mapEffects(transaction.effects, originalToRewritten),
+      annotations: [
+        ...(addToHistory === undefined ? [] : [Transaction.addToHistory.of(addToHistory)]),
+        ...(remote === undefined ? [] : [Transaction.remote.of(remote)]),
+        ...(time === undefined ? [] : [Transaction.time.of(time)])
+      ],
+      ...(userEvent === undefined ? {} : { userEvent }),
+      scrollIntoView: transaction.scrollIntoView
+    };
   });
 
   return protectBlockIds ? [hider, protector] : [hider];
