@@ -1,6 +1,6 @@
 {
   "name": "aag-sidenotes",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Obsidian plugin for sidebar notes linked to the paragraph under the cursor.",
   "main": "main.js",
   "scripts": {
