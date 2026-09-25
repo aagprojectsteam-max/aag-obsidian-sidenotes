@@ -127,12 +127,6 @@ class SideNotesPlugin extends obsidian_1.Plugin {
         this.addCommand({
             id: "toggle-new-note-composer",
             name: "Toggle new note",
-            hotkeys: [
-                {
-                    modifiers: ["Shift"],
-                    key: "PageUp"
-                }
-            ],
             callback: () => {
                 void this.toggleNewNoteComposer();
             }
@@ -964,9 +958,8 @@ class SideNotesPlugin extends obsidian_1.Plugin {
             const attachmentBytes = new Map();
             for (const file of bundle.files) {
                 for (const value of [file.path, ...file.attachments.map((attachment) => attachment.path)]) {
-                    const safe = sanitizeOptionalVaultPath(value);
+                    const safe = sanitizeOptionalVaultPath(value, this.app.vault.configDir);
                     if (!safe ||
-                        safe.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() ||
                         safe === SIDE_NOTES_DATA_PATH ||
                         safe === IMPORT_JOURNAL) {
                         throw new Error("Unsafe import path.");
@@ -5089,14 +5082,16 @@ function sanitizeVaultPath(path) {
     var _a;
     return (_a = sanitizeOptionalVaultPath(path)) !== null && _a !== void 0 ? _a : "Imported side notes.md";
 }
-function sanitizeOptionalVaultPath(path) {
+function sanitizeOptionalVaultPath(path, configDir) {
     var _a, _b;
     const normalizedPath = path.replace(/\\/g, "/");
     if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath))
         return null;
     const parts = normalizedPath.split("/").filter((part) => part.length > 0);
+    const firstPart = (_a = parts[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase();
+    const configRoot = (_b = configDir === null || configDir === void 0 ? void 0 : configDir.replace(/\\/g, "/").split("/").filter((part) => part.length > 0)[0]) === null || _b === void 0 ? void 0 : _b.toLowerCase();
     if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
-        ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === ".obsidian" || ((_b = parts[0]) === null || _b === void 0 ? void 0 : _b.toLowerCase()) === ".git")
+        firstPart === ".git" || (configRoot && firstPart === configRoot))
         return null;
     const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
     return sanitizedParts.join("/") || null;

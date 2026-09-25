@@ -360,12 +360,6 @@ export default class SideNotesPlugin extends Plugin {
     this.addCommand({
       id: "toggle-new-note-composer",
       name: "Toggle new note",
-      hotkeys: [
-        {
-          modifiers: ["Shift"],
-          key: "PageUp"
-        }
-      ],
       callback: () => {
         void this.toggleNewNoteComposer();
       }
@@ -1349,9 +1343,8 @@ export default class SideNotesPlugin extends Plugin {
       const attachmentBytes = new Map<string, string>();
       for (const file of bundle.files) {
         for (const value of [file.path, ...file.attachments.map((attachment) => attachment.path)]) {
-          const safe = sanitizeOptionalVaultPath(value);
+          const safe = sanitizeOptionalVaultPath(value, this.app.vault.configDir);
           if (!safe ||
-              safe.split("/")[0].toLowerCase() === this.app.vault.configDir.toLowerCase() ||
               safe === SIDE_NOTES_DATA_PATH ||
               safe === IMPORT_JOURNAL) {
             throw new Error("Unsafe import path.");
@@ -6202,12 +6195,18 @@ function sanitizeVaultPath(path: string): string {
   return sanitizeOptionalVaultPath(path) ?? "Imported side notes.md";
 }
 
-function sanitizeOptionalVaultPath(path: string): string | null {
+function sanitizeOptionalVaultPath(path: string, configDir?: string): string | null {
   const normalizedPath = path.replace(/\\/g, "/");
   if (/^[\/]|^[A-Za-z]:|[\x00-\x1f\x7f]/.test(normalizedPath)) return null;
   const parts = normalizedPath.split("/").filter((part) => part.length > 0);
+  const firstPart = parts[0]?.toLowerCase();
+  const configRoot = configDir
+    ?.replace(/\\/g, "/")
+    .split("/")
+    .filter((part) => part.length > 0)[0]
+    ?.toLowerCase();
   if (parts.some(part => part.trim() === "." || part.trim() === ".." || part !== part.trim() || part.endsWith(".")) ||
-      parts[0]?.toLowerCase() === ".obsidian" || parts[0]?.toLowerCase() === ".git") return null;
+      firstPart === ".git" || (configRoot && firstPart === configRoot)) return null;
   const sanitizedParts = parts.map((part) => sanitizeFileName(part)).filter((part) => part.length > 0);
   return sanitizedParts.join("/") || null;
 }
