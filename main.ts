@@ -673,17 +673,17 @@ export default class SideNotesPlugin extends Plugin {
       if (!(await this.app.vault.adapter.exists(SIDE_NOTES_FOLDER))) {
         await this.app.vault.createFolder(SIDE_NOTES_FOLDER);
       }
-      const temporary = `${SIDE_NOTES_DATA_PATH}.${crypto.randomUUID()}.pending`;
-      try {
-        await this.app.vault.adapter.write(temporary, serialized);
-        if (await this.app.vault.adapter.read(temporary) !== serialized) throw new Error("SideNotes staged store verification failed.");
-        // Adapter rename is a single filesystem operation on supported desktop adapters.
-        // Failure preserves the existing store; never truncate it in place.
-        await this.app.vault.adapter.rename(temporary, SIDE_NOTES_DATA_PATH);
-      } catch (error) {
-        if (await this.app.vault.adapter.exists(temporary)) await this.app.vault.adapter.remove(temporary);
-        throw error;
+      const existing = this.app.vault.getAbstractFileByPath(SIDE_NOTES_DATA_PATH);
+      if (existing) {
+        if (!(existing instanceof TFile)) throw new Error("SideNotes data path is not a file.");
+        await this.app.vault.process(existing, () => serialized);
+        return;
       }
+
+      if (await this.app.vault.adapter.exists(SIDE_NOTES_DATA_PATH)) {
+        throw new Error("SideNotes data exists but is not available through the Vault API.");
+      }
+      await this.app.vault.create(SIDE_NOTES_DATA_PATH, serialized);
     });
     this.storeSaveQueue = run.catch(() => {});
     return run;
