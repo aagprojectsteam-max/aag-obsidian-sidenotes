@@ -249,7 +249,6 @@ class SideNotesPlugin extends obsidian_1.Plugin {
         const externalData = await this.loadExternalSideNotesData();
         if (externalData) {
             this.sideNotesData = this.normalizeSideNotesData(externalData);
-            await this.saveSideNotesData();
             return;
         }
         const legacyData = getPluginDataRecord(await this.loadData());
@@ -381,6 +380,11 @@ class SideNotesPlugin extends obsidian_1.Plugin {
                 throw new Error("Recover the interrupted import before saving.");
             if (!(await this.app.vault.adapter.exists(SIDE_NOTES_FOLDER))) {
                 await this.app.vault.createFolder(SIDE_NOTES_FOLDER);
+            }
+            const existing = this.app.vault.getAbstractFileByPath(SIDE_NOTES_DATA_PATH);
+            if (existing instanceof obsidian_1.TFile && typeof this.app.vault.process === "function") {
+                await this.app.vault.process(existing, () => serialized);
+                return;
             }
             const temporary = `${SIDE_NOTES_DATA_PATH}.${crypto.randomUUID()}.pending`;
             try {
