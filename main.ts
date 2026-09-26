@@ -524,7 +524,6 @@ export default class SideNotesPlugin extends Plugin {
     const externalData = await this.loadExternalSideNotesData();
     if (externalData) {
       this.sideNotesData = this.normalizeSideNotesData(externalData);
-      await this.saveSideNotesData();
       return;
     }
 
