@@ -1,8 +1,8 @@
-# SideNotes
+# AAG - SideNotes
 
-SideNotes adds paragraph-linked sidebar notes, media and exports. This AAG-maintained continuation preserves the historical plugin ID `context-aware-paragraph-notes`.
+AAG - SideNotes adds paragraph-linked sidebar notes, media and exports. This AAG-maintained continuation preserves the historical plugin ID `context-aware-paragraph-notes`.
 
-SideNotes is an Obsidian plugin for writing sidebar notes that stay connected to the paragraph you are reading or editing.
+AAG - SideNotes is an Obsidian plugin for writing sidebar notes that stay connected to the paragraph you are reading or editing.
 
 SideNotes stores notes separately in `_SideNotes` and links them to the exact paragraph that matters. Move through your document, and the sidebar follows your cursor, showing only the notes that belong to the current paragraph. You can also switch to a file-wide view to review every note saved for the current file.
 
