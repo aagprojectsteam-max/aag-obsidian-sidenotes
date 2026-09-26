@@ -524,7 +524,6 @@ export default class SideNotesPlugin extends Plugin {
     const externalData = await this.loadExternalSideNotesData();
     if (externalData) {
       this.sideNotesData = this.normalizeSideNotesData(externalData);
-      await this.saveSideNotesData();
       return;
     }
 
@@ -673,6 +672,12 @@ export default class SideNotesPlugin extends Plugin {
       if (!(await this.app.vault.adapter.exists(SIDE_NOTES_FOLDER))) {
         await this.app.vault.createFolder(SIDE_NOTES_FOLDER);
       }
+      const existing = this.app.vault.getAbstractFileByPath(SIDE_NOTES_DATA_PATH);
+      if (existing instanceof TFile && typeof this.app.vault.process === "function") {
+        await this.app.vault.process(existing, () => serialized);
+        return;
+      }
+
       const temporary = `${SIDE_NOTES_DATA_PATH}.${crypto.randomUUID()}.pending`;
       try {
         await this.app.vault.adapter.write(temporary, serialized);
